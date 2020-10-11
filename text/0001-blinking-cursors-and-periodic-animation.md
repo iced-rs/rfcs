@@ -92,6 +92,8 @@ The intermediate state of a user interface (at the transition of a update/draw c
 
 Modifying the behavior of the wait state is surprisingly trivial, thanks to the underlying use of `winit`. Instead of setting the event loops' `control_flow` to `Wait`, we just set it to `WaitUntil( <time of soonest update> )`. This changes the behavior to wait until the next event, or the provided time (whichever is sooner).
 
+As the event loop only updates/draws in response to events/user-interaction, we emit a new synthetic event `AnimationTick` to drive the update cycle.
+
 ### 2: Widget trait changes
 
 An update is needed to the [Widget](https://docs.rs/iced_native/0.2.2/iced_native/widget/trait.Widget.html) trait to communicate the animation requirements of a widget - in our case, that the `TextInput` widget needs to be re-drawn in 500ms.
