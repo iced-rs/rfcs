@@ -53,7 +53,7 @@ The `theme` method works analogously to other methods in the trait like `view`, 
 
 Widgets may require the `Application::Theme` to implement their own specific style sheets. For instance, a `Button` requires `Application::Theme` to implement `button::StyleSheet` before it can be used.
 
-Furthermore, the `StyleSheet` trait of a widget can introduce associated types to offer additional styling flexibility. For instance, `button::StyleSheet` introduces a `Variant` associated type which can be used to set the specific variant of a `Button` instance with the new `Button::variant` method.
+Furthermore, the `StyleSheet` trait of a widget can introduce associated types to offer additional styling flexibility. For instance, `button::StyleSheet` introduces a `Style` associated type which can be used to set the specific style of a `Button` instance with the `Button::style` method.
 
 Widgets and `Element` in `iced` now have a `Theme` generic type, alongside the potentially present `Message`, that needs to be specified in the type signatures. The compiler will be able to infer the type in other instances, so the overall impact on the API should be relatively low.
 
@@ -68,7 +68,7 @@ struct Theme {
 }
 ```
 
-Then, we define the variants of a `Button` we will have in our application:
+Then, we define the styles of a `Button` we will have in our application:
 
 ```rust
 #[derive(Debug, Clone, Copy)]
@@ -78,7 +78,7 @@ enum Button {
     Destructive,
 }
 
-// The `Button` widget demands that the `Variant` of a `button::StyleSheet`
+// The `Button` widget demands that the `Style` of a `button::StyleSheet`
 // implements `Default`
 impl Default for Button {
     fn default() -> Self {
@@ -93,15 +93,15 @@ Now, we can implement `button::StyleSheet` for our `Theme`:
 use iced::button;
 
 impl button::StyleSheet for Theme {
-    type Variant = Button;
+    type Style = Button;
 
-    fn active(&self, variant: Button) -> button::Style {
+    fn active(&self, style: Button) -> button::Style {
         // We can use the `Theme` colors in `self` here and produce a different
-        // `button::Style` for each `Button` variant
-        match variant {
-            Variant::Primary => /* ... */,
-            Variant::Positive => /* ... */,
-            Variant::Destructive => /* ... */,
+        // `button::Style` for each `Button` style
+        match style {
+            Button::Primary => /* ... */,
+            Button::Positive => /* ... */,
+            Button::Destructive => /* ... */,
         }
     }
 }
@@ -124,11 +124,11 @@ impl Application for Example {
 
     // Notice that `Element` needs to know about the custom `Theme` now!
     fn view(&self) -> Element<Self::Message, Self::Theme> {
-        // Let's show all of our button variants
+        // Let's show all of our button styles
         column()
-            .push(button("Primary")) // The default `Button` variant is used!
-            .push(button("Positive").variant(theme::Button::Positive))
-            .push(button("Destructive").variant(theme::Button::Destructive))
+            .push(button("Primary")) // The default `Button` style is used!
+            .push(button("Positive").style(theme::Button::Positive))
+            .push(button("Destructive").style(theme::Button::Destructive))
             .into()
     }
 
@@ -142,7 +142,7 @@ impl Application for Example {
 }
 ```
 
-As you can see, the new `Theme` associated type ties everything up together in a type-safe way. If we were to change our `Theme` to a different type, our `view` code would stop compiling unless the new type supported the same button variants.
+As you can see, the new `Theme` associated type ties everything up together in a type-safe way. If we were to change our `Theme` to a different type, our `view` code would stop compiling unless the new type supported the same button styles.
 
 
 ### Built-in themes
@@ -150,7 +150,7 @@ Overall, custom themes are considered an advanced use case.
 
 Users that are getting started with iced do not want to be forced to build a custom theme and manually implement the `StyleSheet` trait of every widget they need. Additionally, they may not be interested in fine-tuning the looks of the application, but instead they may just want to choose an existing good-looking theme.
 
-For these reasons, `iced` provides a built-in `Theme` type and `theme` module with variants for some widgets that can be used out of the box:
+For these reasons, `iced` provides a built-in `Theme` type and `theme` module with styles for some widgets that can be used out of the box:
 
 ```rust
 use iced::pure::{Application, Element};
@@ -163,7 +163,7 @@ impl Application for Example {
     type Theme = Theme;
 
     fn view(&self) -> Element<Message> {
-        button("Hello!").variant(theme::Button::Secondary)
+        button("Hello!").style(theme::Button::Secondary)
     }
 
     fn theme(&self) -> Theme {
@@ -174,16 +174,71 @@ impl Application for Example {
 
 Notice how, in this case, we didn't specify the `Theme` in the `Element`. All of the built-in widgets (and `Element`) will use the built-in `Theme` type as the default type for their new `Theme` generic type. As a result, when using the built-in `Theme`, all of the type signatures can stay simple!
 
-For now, the built-in `Theme` will be a simple enum with two variants:
+For now, the built-in `Theme` will be a simple enum with three variants:
 
 ```rust
 pub enum Theme {
     Light,
     Dark,
+    Custom(Palette),
 }
 ```
 
 The built-in `Theme`, as well as the supported widget variants, can be thoroughly extended in the future! See "[Future possibilities](#future-possibilities)".
+
+The `Custom` variant can be used to define a custom color `Palette`, which is defined as follows:
+
+```rust
+pub struct Palette {
+    background: Color,
+    text: Color,
+    primary: Color,
+    success: Color,
+    danger: Color,
+}
+```
+
+Internally, all of the `Theme` variants will define its own `Palette`. In other words, both `Light` and `Dark` themes are just built-in custom color palettes:
+
+```rust
+assert_eq!(Theme::Light.palette(), Theme::Custom(Theme::Light.palette()).palette());
+```
+
+### Extending the built-in themes
+
+The built-in `Theme` can be supported by custom widgets defined in other crates of the ecosystem.
+
+A custom widget can define its own `StyleSheet` trait:
+
+```rust
+pub trait StyleSheet {
+    type Style: Default + Copy;
+
+    // ...
+}
+```
+
+And then, implement the trait for the built-in `Theme` in the same crate:
+
+```rust
+use iced::Theme;
+
+impl StyleSheet for Theme {
+    type Style = /* ... */;
+
+    // ...
+}
+```
+
+`Theme` exposes an `extended_palette` method that can be leveraged in the `StyleSheet` implementation to choose the proper colors. `extended_palette` returns a `palette::Extended` type that contains different shades generated from the original `Palette` of a `Theme`.
+
+These internal details are likely to change as we fine-tune the specific styling for `iced`, which falls out of scope of this RFC.
+
+### `Sandbox` and simplicity
+
+For simplicity, the `Sandbox` trait does not have the `Theme` associated type and, as a result, will always use the default built-in `Theme` type.
+
+As a consequence, users will need to migrate to the `Application` trait if they decide to leverage a custom `Theme` type. However, `Sandbox` does have a `theme` method that can be used to change the `Theme` variant.
 
 
 ## Implementation strategy
@@ -202,33 +257,30 @@ where
     Renderer::Theme: StyleSheet,
 {
     // ...
-    // A `Button` stores the `Variant` defined by the `StyleSheet`
-    variant: <Renderer::Theme as StyleSheet>::Variant,
+    // A `Button` stores the `Style` defined by the `StyleSheet`
+    style: <Renderer::Theme as StyleSheet>::Style,
 }
 
 impl<'a, Message, Renderer> Button<'a, Message, Renderer>
 where
     Renderer: iced_native::Renderer,
     Renderer::Theme: StyleSheet,
-    // We require the `Variant` to implement `Default` as well, so we can
-    // initialize it!
-    <Renderer::Theme as StyleSheet>::Variant: Default,
 {
     pub fn new(content: impl Into<Element<'a, Message, Renderer>>) -> Self {
         Button {
             // ...
-            variation: <Renderer::Theme as StyleSheet>::Variation::default(),
+            style: Default::default(),
         }
     }
 
     // ...
 
-    /// Sets the style variant of this [`Button`].
-    pub fn variant(
+    /// Sets the style of this [`Button`].
+    pub fn style(
         mut self,
-        variant: <Renderer::Theme as StyleSheet>::Variation,
+        style: impl Into<<Renderer::Theme as StyleSheet>::Style>,
     ) -> Self {
-        self.variant = variant;
+        self.style = style.into();
         self
     }
 }
@@ -494,11 +546,10 @@ The design also allows for easy customization and extensibility. Supporting cust
 
 ## Unresolved questions
 
-- Should we introduce the `Theme` associated type to `Sandbox` too? Or should we hardcode the built-in `Theme` for any `Sandbox` application?
-- This may be a good change to rethink and improve the default styling for every widget. What kind of styling should we use for the `Light` and `Dark` variants of the built-in `Theme`?
+- All questions resolved for now!
 
 
 ## Future possibilities
 
-- In the future, the built-in `Theme` can be extended with additional variants for supporting different color schemes. A `Custom` variant offering fine-tune control over the color palette could eventually be possible as well.
+- In the future, the built-in `Theme` can be extended with additional variants for supporting different color schemes.
 - An `Autodetect` variant could be added to the built-in `Theme` to let `iced` choose the best fitting variant of the `Theme` based on the environment (e.g. OS settings).
