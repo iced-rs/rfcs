@@ -89,10 +89,12 @@ Since we may produce many different text inputs in our `Application::view`, we n
 
 A **widget identifier** is an instance of some opaque type `Id` exported by a widget module. A widget will only support identifiers if it exposes an operation that needs them.
 
-For instance, the `MY_TEXT_INPUT_ID` constant in the previous example could be defined as follows:
+For instance, the `MY_TEXT_INPUT_ID` static in the previous example could be defined as follows:
 
 ```rust
-const MY_TEXT_INPUT_ID: text_input::Id = text_input::Id::unique();
+lazy_static! {
+    static MY_TEXT_INPUT_ID: text_input::Id = text_input::Id::unique();
+}
 ```
 
 For any built-in widget, the `unique` constructor of an `Id` type always produces a different instance every time it's called:
@@ -127,7 +129,7 @@ A new `widget` method will be introduced to `Command` in `iced_native`:
 
 ```rust
 impl<T> Command<T> {
-    pub fn widget(operation: impl widget::Operation<Output = T>) -> Self {
+    pub fn widget(operation: impl widget::Operation<T>) -> Self {
         Self::single(Action::Widget(Box::new(operation)))
     }
 }
@@ -139,7 +141,7 @@ As shown above, the implementation of `Command::widget` will use a new `command:
 pub enum Action<T> {
     // ...
     /// Run a widget operation.
-    Widget(Box<dyn widget::Operation<Output = T>>)
+    Widget(Box<dyn widget::Operation<T>>)
 }
 ```
 
@@ -169,22 +171,22 @@ use crate::widget::Id;
 use crate::widget::state;
 
 pub trait Operation<T> {
-    fn clickable(&mut self, state: &mut dyn state::Clickable, id: Option<Id>);
-    fn focusable(&mut self, state: &mut dyn state::Focusable, id: Option<Id>);
-    fn editable(&mut self, state: &mut dyn state::Editable, id: Option<Id>);
+    fn clickable(&mut self, state: &mut dyn operation::Clickable, id: Option<Id>);
+    fn focusable(&mut self, state: &mut dyn operation::Focusable, id: Option<Id>);
+    fn editable(&mut self, state: &mut dyn operation::Editable, id: Option<Id>);
     fn text(&mut self, contents: &str, id: Option<Id>);
 
     fn container(
         &mut self,
         _id: Option<Id>,
-        operate_on_children: &dyn FnOnce(&mut dyn Operation<Output = Self::Output>),
+        operate_on_children: &mut dyn FnMut(&mut dyn Operation<T>),
     );
 
     // ...
     // Further methods can be added for additional widget types!
     // ...
 
-    fn finish(self) -> Outcome<T>;
+    fn finish(&self) -> Outcome<T>;
 }
 ```
 
@@ -204,7 +206,7 @@ pub fn focus<Message>(id: Id) -> Command<Message> {
 struct Focus(Id);
 
 impl<T> widget::Operation<T> for Focus {
-    fn focusable(&mut self, state: &mut dyn state::Focusable, id: Option<Id>) {
+    fn focusable(&mut self, state: &mut dyn operation::Focusable, id: Option<Id>) {
         // If the current widget has an identifier...
         if let Some(candidate_id) = id {
             // And it matches the identifier we are looking for...
@@ -218,13 +220,13 @@ impl<T> widget::Operation<T> for Focus {
     fn container(
         &mut self,
         _id: Option<Id>,
-        operate_on_children: &dyn FnOnce(&mut dyn Operation<Output = Self::Output>),
+        operate_on_children: &mut dyn FnMut(&mut dyn Operation<T>),
     ) {
         // If the current widget is a container, we just keep traversing the tree.
         operate_on_children(self)
     }
 
-    fn finish(self) -> Outcome<T> {
+    fn finish(&self) -> Outcome<T> {
         Outcome::None
     }
 
@@ -245,17 +247,17 @@ pub trait Operation<T> {
     fn container(
         &mut self,
         _id: Option<Id>,
-        operate_on_children: &dyn FnOnce(&mut dyn Operation<Output = Self::Output>),
+        operate_on_children: &mut dyn FnMut(&mut dyn Operation<T>),
     );
 
-    fn clickable(&mut self, state: &mut dyn state::Clickable, id: Option<Id>) {}
-    fn focusable(&mut self, state: &mut dyn state::Focusable, id: Option<Id>) {}
-    fn editable(&mut self, state: &mut dyn state::Editable, id: Option<Id>) {}
+    fn clickable(&mut self, state: &mut dyn operation::Clickable, id: Option<Id>) {}
+    fn focusable(&mut self, state: &mut dyn operation::Focusable, id: Option<Id>) {}
+    fn editable(&mut self, state: &mut dyn operation::Editable, id: Option<Id>) {}
     fn text(&mut self, contents: &str, id: Option<Id>) {}
 
     // ...
 
-    fn finish(self) -> Outcome<T> {
+    fn finish(&self) -> Outcome<T> {
         Outcome::None
     }
 }
@@ -267,7 +269,7 @@ Therefore, an empty implementation of an `Operation` will be the "identity" oper
 
 For reusability, widget operations should be decoupled from particular widget implementations. Furthermore, it is necessary for operations to work even when custom widgets are present in a `view`.
 
-Because of this, the `Operation` trait relies on a new set of generic traits meant to represent different kinds of widget state. For instance, instead of directly relying on `text_input::State`, the `Operation` trait takes an implementor of the `state::Focusable` trait:
+Because of this, the `Operation` trait relies on a new set of generic traits meant to represent different kinds of widget state. For instance, instead of directly relying on `text_input::State`, the `Operation` trait takes an implementor of the `operation::Focusable` trait:
 
 ```rust
 pub trait Focusable {
@@ -277,10 +279,10 @@ pub trait Focusable {
 }
 ```
 
-This way, an `Operation` can support virtually any widget, as long as the internal widget state implements the proper state traits. For example, `text_input::State` will implement `state::Focusable`:
+This way, an `Operation` can support virtually any widget, as long as the internal widget state implements the proper state traits. For example, `text_input::State` will implement `operation::Focusable`:
 
 ```rust
-impl state::Focusable for State {
+impl operation::Focusable for State {
     fn is_focused(&self) -> bool {
         State::is_focused(self)
     }
@@ -310,7 +312,7 @@ The `Outcome` of an operation can take one of 3 shapes:
 pub enum Outcome<T> {
     None,
     Some(T),
-    Chain(Box<dyn Operation<Output = T>>),
+    Chain(Box<dyn Operation<T>>),
 }
 ```
 
@@ -328,11 +330,35 @@ for action in command.actions() {
     match action {
         // ...
         command::Action::Widget(operation) => {
-            user_interface.operate(renderer, operation);
+            let mut current_cache = std::mem::take(cache);
+            let mut current_operation = Some(action.into_operation());
 
-            let outcome = operation.finish();
+            let mut user_interface = build_user_interface(
+                application,
+                current_cache,
+                renderer,
+                state.logical_size(),
+                debug,
+            );
 
-            // Handle the outcome...
+            while let Some(mut operation) = current_operation.take() {
+                user_interface.operate(renderer, operation.as_mut());
+
+                match operation.finish() {
+                    operation::Outcome::None => {}
+                    operation::Outcome::Some(message) => {
+                        proxy
+                            .send_event(message)
+                            .expect("Send message to event loop");
+                    }
+                    operation::Outcome::Chain(next) => {
+                        current_operation = Some(next);
+                    }
+                }
+            }
+
+            current_cache = user_interface.into_cache();
+            *cache = current_cache;
         }
     }
 }
@@ -402,7 +428,7 @@ where
         let state = tree.state.downcast_mut::<text_input::State>();
 
         // We can call `focusable` since `text_input::State` implements
-        // `state::Focusable`
+        // `operation::Focusable`
         operation.focusable(state, self.id);
 
         // `editable` can be called as well, analogously.
