@@ -117,9 +117,32 @@ The only quirk is that in the `layout` function for a widget must then use the s
 where `.at()` is a convenience function that extracts the current animation state for both `Idle` animations and `Working` animations.
 
 #### Diff
-Iced calls the step where the previous layout's widget tree is compared against the new `view`, `diff`ing. This is where the "baton" handoff happens and the `step` function are called. The isssue here is that Iced's current `diff` functions use references to data. `step`ping an animation requires modifying data, so the `diff` state needs to be mutable. This isn't  an issue as `UserInterface::build` already owns the data, it just means that Iced needs to have `diff` and `diff_mut`. The other effected functions are `diff_children_mut`, and `diff_children_custom_mut`. Though for a vast majority of developers they wont need to touch these functions.
+Iced calls the step where the previous layout's widget tree is compared against the new `view`, `diff`ing. This is where the "baton" handoff happens and the `step` function are called. The isssue here is that Iced's current `diff` functions use references to data. `step`ping an animation requires modifying data, so the `diff` state needs to be mutable. This isn't  an issue as `UserInterface::build` already owns the data, it just means that Iced needs to have `diff` and `diff_mut`. Diff_mut also returns an `animation::Request` if any of the widgets require animation in the future. The other effected functions are `diff_children_mut`, and `diff_children_custom_mut`. Though for a vast majority of developers they wont need to touch these functions.
 
-#### Integrating iced (this is still in progress)
+#### animation::Request
+Is documented quite well. Step_state must return one of these. Iced will only listen to the smallest value (shortest requested delta time), as when the shortest value redraw runs, the widget will get another chance to request its redraw time, until it is the shortest value.
+```
+/// The time that a widget requests to be redrawn.
+///
+/// Widgets that implement a [`widget::step_state`] return this value.
+/// It is a signal to the iced runtime when the widget should be redrawn.
+/// Iced will only listen to the shortest time returned from all of the widgets
+/// in the view. Because the widget will then be able to return its requested time
+/// the next time its [`widget::step_state`] is called because of the widget that
+/// required rerender sooner.
+pub enum Request {
+    /// Similar to javascript's requestAnimationFrame, This is a request to render "as soon as possible".
+    /// Though for iced's runtime and most custom implementations that will be as soon as the refresh rate
+    /// of the monitor.
+    AnimationFrame,
+    /// Request some time in the future. That isn't tied to any other value.
+    Timeout(Instant),
+    /// The widget doesn't need to reanimate. It is either done animating, or static.
+    None,
+}
+```
+
+#### Integrating iced
 Custom integrations as well as Iced's `winit` and `glutin` will need to handle the diff state differently. Because `step`ping requires the time to calculate the new animation state all three will have to hold an [`Instant`](https://doc.rust-lang.org/std/time/struct.Instant.html) that is passed to the diff state for each loop. As well currently Iced's `diff` function doesn't return anything. A widget that needs reanimation will return that it needs reanimation, so the iced runtime, or custom integrations will know that they need to build the `UserInterface` again.
 The return type will be of `RequestAnimationFrame` or `Duration(time)`. `RequestAnimationFrame` should be as fast as the user's display, or as fast as the custom integration would like, this is for smooth animations like sliding, resizing, or color changes. `Duration` is for things like cursor blink animations or GIFs or videos, as they would like to be redrawn at their frame rate, which is in some `Duration`.
 
@@ -135,7 +158,6 @@ Animations will require more memory as data to calculate the next frame are requ
 
 ## Unresolved questions
 
-- The diff accumulator, but that isn't' implemented yet.
 - Theme animations, should be similar, but I haven't looked at if/how we can transition a button from one theme option to another.
 - How many widgets should be animatable? As stated in the drawbacks there is a minor performance loss be having to check the animations state each `step`. This could be avoided by only having dimension animations on `column`s, `row`s, `space`s and `container`s, then setting the children to `Length::Fill`, but that is (1) less ergonomic, (2) not proven if creating more widgets would be more performant that running more `match` statements.
 - Chaining animations. Some animations need to do something **then** another animation. My current implementation only animates one value then stops. This should still be possible with most of this RFC, but the API would have to be changed to be adding a `.animation()` function that takes a two-dimensional `vec` of animations. For example something that grows and slides would need `.animate(vec![vec![slide_down, slide_right], vec![set_height_smaller]])`
