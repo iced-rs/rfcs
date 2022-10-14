@@ -15,6 +15,7 @@ Tailwind and SvelteKit will provide a better developer experience and a more per
 ## Guide-level explanation
 
 ### Tailwind
+
 Tailwind provides a JIT-compiled utility class library, allowing fewer lines of code and helpful guidelines to follow while maintaining the control of pure CSS and small bundle size. For example, when the developer types
 
 ```html
@@ -25,7 +26,7 @@ Tailwind will automatically generate
 
 ```css
 .flex {
-    display: flex;
+  display: flex;
 }
 ```
 
@@ -45,28 +46,28 @@ Which respectively generate
 
 ```css
 .hover\:text-sky-400:hover {
-    --tw-text-opacity: 1;
-    color: rgb(56 189 248 / var(--tw-text-opacity));
+  --tw-text-opacity: 1;
+  color: rgb(56 189 248 / var(--tw-text-opacity));
 }
 
 @media (prefers-color-scheme: dark) {
-    .dark\:text-slate-200 {
-        --tw-text-opacity: 1;
-        color: rgb(226 232 240 / var(--tw-text-opacity));
-    }
+  .dark\:text-slate-200 {
+    --tw-text-opacity: 1;
+    color: rgb(226 232 240 / var(--tw-text-opacity));
+  }
 }
 
 @media (min-width: 1024px) {
-    .lg\:hidden {
-        display: none;
-    }
+  .lg\:hidden {
+    display: none;
+  }
 }
 
 @media (prefers-color-scheme: dark) {
-    .dark\:hover\:bg-slate-700:hover {
-        --tw-bg-opacity: 1;
-        background-color: rgb(51 65 85 / var(--tw-bg-opacity));
-    }
+  .dark\:hover\:bg-slate-700:hover {
+    --tw-bg-opacity: 1;
+    background-color: rgb(51 65 85 / var(--tw-bg-opacity));
+  }
 }
 ```
 
@@ -80,8 +81,8 @@ will generate
 
 ```css
 .bg-\[\#50d71e\] {
-    --tw-bg-opacity: 1;
-    background-color: rgb(80 215 30 / var(--tw-bg-opacity));
+  --tw-bg-opacity: 1;
+  background-color: rgb(80 215 30 / var(--tw-bg-opacity));
 }
 ```
 
@@ -91,7 +92,7 @@ This overall allows for faster development, cleaner code, the control of pure CS
 
 SvelteKit includes many different components that each improve the DX:
 
-- [Svelte](https://svelte.dev/) is a powerful and lightweight frontend framework (more details below). 
+- [Svelte](https://svelte.dev/) is a powerful and lightweight frontend framework (more details below).
 - [Vite](https://vitejs.dev/) is frontend tooling with features like Hot Module Reload and optimized builds. Hot module Reload means that Vite can reload just a part of an application's javascript. This allows Vite to automatically load changes without reloading or losing the application's state.
 - [TypeScript](https://www.typescriptlang.org/) is a type-safe version of JavaScript. The type declarations also lead to better IDE tooling like autocomplete and better static analysis.
 - [ESLint](https://eslint.org/) is a static analysis tool. It helps prevent the bad practices in the original website.
@@ -103,15 +104,15 @@ The most influential part of SvelteKit is Svelte as a frontend framework. Svelte
 
 ```html
 <script>
-    let count = 0;
+  let count = 0;
 
-    function handleClick() {
-        count += 1;
-    }
+  function handleClick() {
+    count += 1;
+  }
 </script>
 
-<button on:click={handleClick}>
-    Clicked {count} {count === 1 ? 'time' : 'times'}
+<button on:click="{handleClick}">
+  Clicked {count} {count === 1 ? 'time' : 'times'}
 </button>
 ```
 
@@ -123,7 +124,7 @@ As a result, the implantation at https://iced-website.pages.dev/ has a fast deve
 
 The code for the implementation is at https://github.com/AlistairKeiller/iced-website.
 
-The main code is at /src/routes/+layout.svelte and /src/routes/+page.svelte, while the rest of the project is mostly configuration and assets. +layout is served at the top of every page and currently contains the navigation bar, while +page.svelte is served as the index.html and is the main page's content. Most of the code is just Tailwind/HTML, with some Svelte for the dropdown navbar that appears on mobile. 
+The main code is at /src/routes/+layout.svelte and /src/routes/+page.svelte, while the rest of the project is mostly configuration and assets. +layout is served at the top of every page and currently contains the navigation bar, while +page.svelte is served as the index.html and is the main page's content. Most of the code is just Tailwind/HTML, with some Svelte for the dropdown navbar that appears on mobile.
 
 I only have two noteworthy remarks about the current implementation. First, the SVG icons are manually inlined from Google Material Symbols for performance and flexibility at the cost of long lines of code. Second, the code example is manually syntax highlighted for performance and accuracy, at the cost of requiring a lot of Tailwind/HTML.
 
@@ -153,11 +154,11 @@ Static Site generators, like [Hugo](https://gohugo.io/), [Jekyll](https://jekyll
 
 #### Javascript web frameworks
 
-These are probably the more compelling alternatives. The Javascript frameworks I compared against are [Angular](https://angular.io/)](https://angular.io/), [Vue](https://vuejs.org/), [NextJS](https://nextjs.org/), [Fresh](https://fresh.deno.dev/), [Qwik](https://qwik.builder.io/), [SolidJS](https://www.solidjs.com/), and [Astro](https://astro.build/) ( with Svelte ). 
+These are probably the more compelling alternatives. The Javascript frameworks I compared against are [Angular](https://angular.io/), [Vue](https://vuejs.org/), [NextJS](https://nextjs.org/), [Fresh](https://fresh.deno.dev/), [Qwik](https://qwik.builder.io/), [SolidJS](https://www.solidjs.com/), and [Astro](https://astro.build/) ( with Svelte ).
 
-One of the most significant components of these frameworks is the frontend. We are comparing the frontends Angular, Vue, React, and Svelte. Svelte is a compiler, while the others are Virtual DOMs. This allows Svelte to be the closest to plain Javascript and have the simplest syntax for reactivity. The most significant disadvantage to Svelte is that it is new and, therefore, less popular than the other three. Overall, I think React, Vue, and Svelte will take an iced developer a similar amount of time to get to a good level of productivity, while Angular is probably worse than the other three. But Svelte's simplicity means it providesa better developer experience and higher productivity ceiling. So overall, Svelte as a frontend is better than the alternatives. 
+One of the most significant components of these frameworks is the frontend. We are comparing the frontends Angular, Vue, React, and Svelte. Svelte is a compiler, while the others are Virtual DOMs. This allows Svelte to be the closest to plain Javascript and have the simplest syntax for reactivity. The most significant disadvantage to Svelte is that it is new and, therefore, less popular than the other three. Overall, I think React, Vue, and Svelte will take an iced developer a similar amount of time to get to a good level of productivity, while Angular is probably worse than the other three. But Svelte's simplicity means it providesa better developer experience and higher productivity ceiling. So overall, Svelte as a frontend is better than the alternatives.
 
-However, the React frameworks have some other compelling features. Fresh is based on Deno instead of Node, so it has first-class typescript support, no build step, and is based on the island's architecture for providing javascript only to the components that need it. A disadvantage of being based on Deno is that it is not compatible with npm packages, which leaves much less flexibility. SolidJS has excellent DOM performance. However, that is not a limiting factor for a small website. Qwik lazily loads javascript on the fly to minimize page load times. However, that is at the cost of requiring an async version of React that makes for a worse developer experience. Finally, NextJS has a massive ecosystem. However, that is not a significant advantage for a small and simple project. So none of the React frameworks have benefits that outweigh Svelte's and SvelteKit's benefits. 
+However, the React frameworks have some other compelling features. Fresh is based on Deno instead of Node, so it has first-class typescript support, no build step, and is based on the island's architecture for providing javascript only to the components that need it. A disadvantage of being based on Deno is that it is not compatible with npm packages, which leaves much less flexibility. SolidJS has excellent DOM performance. However, that is not a limiting factor for a small website. Qwik lazily loads javascript on the fly to minimize page load times. However, that is at the cost of requiring an async version of React that makes for a worse developer experience. Finally, NextJS has a massive ecosystem. However, that is not a significant advantage for a small and simple project. So none of the React frameworks have benefits that outweigh Svelte's and SvelteKit's benefits.
 
 Finally, Astro uses the island architecture for only providing javascript to components that need it. This would significantly help the iced website's performance, mostly time to interactive. However, time to interactive is not an issue with the SvelteKit website, and Astro with Svelte also has many disadvantages. Astro is not built for Svelte, which shows in the Developer experience; it does not have the same level of tooling for Svelte as SvelteKit. Also, Astro does not provide a client-side router for fast site navigation.
 
