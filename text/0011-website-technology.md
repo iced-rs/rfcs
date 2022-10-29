@@ -2,7 +2,7 @@
 
 ## Summary
 
-The goal of this RFC is to make a decsion on which tehnology is best for Iced's website based on what the goal and requirments for the website are. This RFC details every requirement for the Iced website, so that once we agree on the requirements, we can decide on the best technology for the website.
+The goal of this RFC is to make a decision on which technology is best for Iced's website based on the goals and requirements for the website. This RFC details every requirement for the Iced website so that once we agree on the requirements, we can decide on the best technology for the website.
 
 ## Requirements
 
