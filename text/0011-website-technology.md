@@ -26,15 +26,15 @@ The goal of this RFC is to make a decision on which technology is best for Iced'
   - The guide should be written in Markdown
     - The Markdown's code blocks should be rendered with syntax highlighting and a copy button
     - Headings should be rendered with a clickable item next to them that links to their corresponding anchor
-    - The headings in a given page of Markdown should be displayed in a "On this page" sidebar
+    - The headings in a given page of Markdown should be displayed in an "On this page" sidebar
       - The headings in the "On this page" section should be clickable to jump to the corresponding section
       - The headings in the "On this page sections" should be highlighted to indicate the current section
 - The website should have a showcase page
   - The showcase page should display all the projects using Iced
   - The showcase page should display Iced's examples
-  - Each example should be shown with a image or gif, and a link to the project's source code
+  - Each example should be shown with an image or gif, and a link to the project's source code
 - The website should have a contributors page
-  - The contributors page should display the GitHub profile all the people who have contributed to Iced in the order of GitHub's contribution ranking
+  - The contributors page should display the GitHub profiles of all the people who have contributed to Iced in the order of GitHub's contribution ranking
 - The website should have a roadmap page
 - The website should have a 404 page
 - The website should be free to host
@@ -53,7 +53,7 @@ These are like requirements, but they do not have a clear yes or no answer.
     - The website should not rewrite and maintain a tool if another developer is already maintaining a tool that does the same thing
 - The website should have accessible development
   - The website's development environment should be easy to install and run
-  - The website should be written in with tools that an average developer could quickly use, either by being familiar, easy to learn or a mix of both
+  - The website should be written with tools that an average developer could quickly use, either by being familiar, easy to learn, or a mix of both
 - The website should have a good DX
   - Changes to the code should interactively update in the browser
   - Features should be fast to write
