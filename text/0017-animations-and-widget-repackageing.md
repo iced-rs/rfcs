@@ -2,7 +2,7 @@
 
 ## Summary
 
-In Iced each widget has a state. This is data that is widget data that can be handled by Iced without developer intervention. This is mostly for developer convenience, widget repackaging aims to expand on that convenience and allow for simple animations, but also for optimizations where the widget may use a cache. After each render of the UI iced stores this widget state in a cache, to prevent Iced from having to allocate on the stack for each widget each render. This RFC intends on expanding that behavior.
+In Iced each widget has a state. The state contains necessary data for widget functionality, and as of Iced 0.5 the widget state is handled by Iced without developer intervention. This is mostly for developer convenience, widget repackaging aims to expand on that convenience and allow for simple animations, but also for optimizations where the widget may use a cache. After each render of the UI iced stores this widget state in a cache, to prevent Iced from having to allocate on the stack for each widget each render. This RFC intends on expanding that behavior.
 The goals of this RFC are to allow for a simple animation API and widget optimizations like a text render cache via:
 	2 ) Widget repackaging: Add a step where data from the state can be used for calculations and/or re-injected into the widget itself.
 	3 ) Widget Redraw:      Allow widgets to request redraw.
