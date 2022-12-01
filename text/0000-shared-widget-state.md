@@ -174,6 +174,35 @@ For keyboard mapping we would need to map the gamepad messages to keyboard event
 > - It is reasonably clear how the feature would be implemented.
 > - Corner cases are dissected by example.
 
+### The Focus Store
+The focus store is made up for a few parts.
+- A state structure that stores the current focus state.
+- A read trait that allows widgets to query the current focus state.
+- A write trait that allows widgets to update the current focus state.
+
+The widget would implement the read trait and the application would implement the write trait. This will allow the application to update the focus state and the widgets to query the focus state. 
+
+> GOOD!
+```mermaid
+  graph TD;
+    Application--DirectCall-->Store;
+    Store-->State[(State)];
+    Query--QueryMessage-->Widget
+    Widget--UpdateMessage-->Application;
+    State-->Query;
+```
+
+Widgets would also be able to update the focus state but this is not recommended.
+Ideally the widget should delegate the focus state to the application. This will allow the application to coordinate the focus state of the widget tree. Since the application is the only one that can update the focus state it can also handle the keyboard events and update the focus state.
+> BAD!
+```mermaid
+  graph TD;
+    Store-->State[(State)];
+    Query--QueryMessage-->Widget
+    State-->Query;
+    Widget--DirectCall-->Store;
+```
+
 ### Focus Message
 To update our widgets we will generate a message with the widget leaving focus, and then another with the widget receiving focus.
 We would not rely on the `on_focus` and `on_unfocus` methods of the `Widget` trait. Instead we would use the `on_focus` and `on_unfocus` methods of the `Focusable` trait. This would allow us to update the focus state of the widget tree in a single place.
