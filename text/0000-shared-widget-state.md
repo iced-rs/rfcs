@@ -1,6 +1,8 @@
 # Global Store: Focus
 
-> Status: Discussing
+> # Status: Discussing
+
+> I am still discovering the best way to do this with Iced. I will update this RFC as I learn more, as I am lacking critical knowledge around the widget lifecycle and messaging.
 
 ## Summary
 > One paragraph explanation of the feature.
@@ -53,13 +55,30 @@ imple State {
 ```
 
 Next we will need to implement a way to store or query the current focus state of the widget tree. This can be done by storing the current focus state in the application state. This will also allow us to access the current focus state from any widget in the widget tree.
+
+Lets implement a read trait for our application state.
 ```rs
-impl Focusable for State {
-    /// Check if the given `Id` is the same as the one stored in this state.
+impl FocusableQuery for State {
+    /// Returns true if the `Id` stored in this state is the focused one.
     pub fn is_focused(&self) -> bool {
         widget::store::focus::is_focused(&self.id)
     }
 
+    pub fn on_focus(&mut self, message: Self::Message) -> Command<Self::Message> {
+        // QUESTION: I don't think this will be needed since we should be able to
+        // message the widget directly. I am not sure how to do this yet.
+    }
+
+    pub fn on_unfocus(&mut self, message: Self::Message) -> Command<Self::Message> {
+        // QUESTION: I don't think this will be needed since we should be able to
+        // message the widget directly. I am not sure how to do this yet.
+    }
+}
+```
+
+And a write trait for our application state.
+```rs
+impl Focusable for State {
     /// Set the `Id` stored in this state as the focused one.
     pub fn focus(&mut self) {
         widget::store::focus::focus(&self.id);
@@ -70,7 +89,6 @@ impl Focusable for State {
         widget::store::focus::unfocus(&self.id);
     }
 }
-
 ```
 
 We should display the focused widget in some way to the user. This can be done by adding a border around the widget or changing the color of the widget.
@@ -148,7 +166,6 @@ For keyboard mapping we would need to map the gamepad messages to keyboard event
 > # Implementation strategy
 > ## The details of how we store and retrieve the focus state should be discussed here. The following code is an example of how this could be implemented. This is not meant to be a final solution but a starting point for discussion.
 
-```rs
 >
 > This is the most important part of the RFC. 
 >
@@ -157,22 +174,41 @@ For keyboard mapping we would need to map the gamepad messages to keyboard event
 > - It is reasonably clear how the feature would be implemented.
 > - Corner cases are dissected by example.
 
+### Focus Message
+To update our widgets we will generate a message with the widget leaving focus, and then another with the widget receiving focus.
+We would not rely on the `on_focus` and `on_unfocus` methods of the `Widget` trait. Instead we would use the `on_focus` and `on_unfocus` methods of the `Focusable` trait. This would allow us to update the focus state of the widget tree in a single place.
+
+```rs
+pub enum Message {
+    Focused,
+    Unfocused,
+}
+```
+
 ### Focusable Trait
-The `Focusable` trait will be used to store the `Id` of the widget and provide methods to query and update the focus state of the widget.
+The `Focusable` trait will be used to store the `Id` of the widget and provide methods to update state.
 
 ```rs
 pub trait Focusable {
-    /// Return the id of the widget.
-    pub fn id(&self) -> Option<Id> 
-
-    /// Check if the given `Id` is the same as the one stored in this state.
-    pub fn is_focused(&self) -> bool;
-
     /// Set the `Id` stored in this state as the focused one.
     pub fn focus(&mut self);
 
     /// Set the `Id` stored in this state as None.
     pub fn unfocus(&mut self);
+}
+```
+### Focusable Query Trat 
+The `FocusableQuery` trait will be used to query the focus state of the widget tree.
+
+```rs
+pub trait FocusableQuery {
+    pub fn is_focused(&self) -> bool;
+
+    // QUESTION: Uncertain we will need this method as mentioned above.
+    pub fn on_focus(&mut self, message: Self::Message) -> Command<Self::Message>;
+
+    // QUESTION: Uncertain we will need this method as mentioned above.
+    pub fn on_unfocus(&mut self, message: Self::Message) -> Command<Self::Message>;
 }
 ```
 
@@ -325,24 +361,6 @@ pub fn focus_down() -> Message {
 }
 ```
 
-### Focusable Widget
-```rs
-impl<'a, Message, Renderer> Widget<Message, Renderer>
-where
-    Renderer: self::Renderer,
-{
-    pub fn focusable(self) -> Self {
-        self.map(move |message, _renderer| {
-            if let Message::Focused = message {
-                widget::store::focus::focus(&self.id);
-            }
-
-            message
-        })
-    }
-}
-```
-
 
 > The section should return to the examples given in the previous section, and explain more fully how the detailed proposal makes those examples work.
 
@@ -372,20 +390,9 @@ impl Focusable for State {
         widget::store::focus::is_focused(&self.id)
     }
 
+    /// Maybe we want to navigate on our own terms.
     pub fn focus_next() -> Message {
         widget::store::focus::focus_next()
-    }
-
-    pub fn focus_prev() -> Message {
-        widget::store::focus::focus_prev()
-    }
-
-    pub fn focus_up() -> Message {
-        widget::store::focus::focus_up()
-    }
-
-    pub fn focus_down() -> Message {
-        widget::store::focus::focus_down()
     }
 
     /// Set the `Id` stored in this state as the focused one.
