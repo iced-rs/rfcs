@@ -77,7 +77,7 @@ Next we will implement a message type that will be used to update the focus stat
 ```rs
 pub enum Message {
     Focus(Id),
-    Unfocus,
+    Unfocus(Id),
 }
 
 fn update(&mut self, message: Message) -> Command<Message> {
@@ -111,7 +111,7 @@ imple State {
 
 Next we need implement a way to query the current focus state of the widget tree.
 
-Lets implement a read trait for on our widget.
+Lets also implement a read trait for on our widget.
 
 > Widget Level
 ```rs
@@ -156,12 +156,10 @@ let mut styling = if !is_enabled {
 };
 
 ```
-> Explaining how iced programmers should *think* about the feature, and how it should impact the way they use iced. It should explain the impact as concretely as possible.
 
+By following this pattern we should be able to coordinate the focus state between the application and the widgets. This will allow us to implement keyboard driven events to fully navigate and interact with an Iced UI. While providing a healthy pattern that could be used for other shared state requirements in the future.
 
-
-By following this pattern we should be able to coordinate the focus state of the widget tree and display the focused widget to the user. While this is a good start we still need to implement a way to navigate the widget tree with the keyboard.
-
+This is a common pattern that is used in other UI frameworks. 
 ### Keyboard Navigation
 
 The first thing we need to do is implement a way to navigate the widget tree with the keyboard. This can be done by implementing the `Application` trait for your application `State` struct. This trait will be used to handle keyboard events and update the focus state of the widget tree through the subscription and update methods.
@@ -221,12 +219,11 @@ For keyboard mapping we would need to map the gamepad messages to keyboard event
 
 ### Focus Message
 To update our widgets we will generate a message with the widget leaving focus, and then another with the widget receiving focus.
-We would not rely on the `on_focus` and `on_unfocus` methods of the `Widget` trait. Instead we would use the `on_focus` and `on_unfocus` methods of the `Focusable` trait. This would allow us to update the focus state of the widget tree in a single place.
 
 ```rs
 pub enum Message {
-    Focused,
-    Unfocused,
+    Focused(Id),
+    Unfocused(Id),
 }
 ```
 
@@ -234,7 +231,7 @@ pub enum Message {
 The `Focusable` trait will be used to store the `Id` of the widget and provide methods to update state.
 
 ```rs
-pub trait Focusable {
+pub trait FocusableWrite {
     /// Set the `Id` stored in this state as the focused one.
     pub fn focus(&mut self);
 
@@ -242,22 +239,24 @@ pub trait Focusable {
     pub fn unfocus(&mut self);
 }
 ```
-### Focusable Query Trat 
+### Focusable Query Trait 
 The `FocusableQuery` trait will be used to query the focus state of the widget tree.
 
 ```rs
 pub trait FocusableQuery {
     pub fn is_focused(&self) -> bool;
 
-    // QUESTION: Uncertain we will need this method as mentioned above.
     pub fn on_focus(&mut self, message: Self::Message) -> Command<Self::Message>;
 
-    // QUESTION: Uncertain we will need this method as mentioned above.
     pub fn on_unfocus(&mut self, message: Self::Message) -> Command<Self::Message>;
 }
 ```
 
+> ## WARNING!! THIS IS ALL SPECULATIVE IMPLEMENTATION BELOW.
+> ## BEGIN UNVETTED BRAIN DUMP
+
 ### Focus Store
+
 The focus store will be used to store the current focus state of the widget tree. This will allow us to query the current focus state of the widget tree and update the focus state of the widget tree.
 
 ```rs
@@ -273,6 +272,7 @@ pub fn unfocus(id: &Id) {
     FOCUS.with(|focus| focus.replace(None));
 }
 ``` 
+
 
 ### Focus Next
 This method will be used to focus the next widget in the widget tree.
@@ -405,53 +405,17 @@ pub fn focus_down() -> Message {
     Message::None
 }
 ```
-
+> ## END UNVETTED BRAIN DUMP
 
 > The section should return to the examples given in the previous section, and explain more fully how the detailed proposal makes those examples work.
+As your can see from the examples above, the `Focusable` trait will be used to store the focus state of a widget. The `FocusableQuery` trait will be used to query the focus state of a widget. The `focus_next`, `focus_prev`, `focus_up`, and `focus_down` methods will be used to update the focus state of the widget tree.
 
-As you can see in the examples above, the `Focusable` trait will provide the `is_focused` and `focus` methods. These methods will be used to query the current focus state of the widget and update the focus state of the widget. The `focus` method will be called when the widget desires focuse and the `is_focused` method will be called to determine if the widget is focused.
 
-```rs
-struct State {
-    id: Id
-}
-
-imple State {
-    fn new() -> State {
-        State {
-            id: Some(Id::unique()),
-            ..State::default()
-        }
-    }
-}
-
-impl Focusable for State {
-    /// Returns the internal id of the widget.
-    pub fn id(&self) -> Option<Id> {
-        self.id
-    }
-    /// Check if the given `Id` is the same as the one stored in this state.
-    pub fn is_focused(&self) -> bool {
-        widget::store::focus::is_focused(&self.id)
-    }
-
-    /// Maybe we want to navigate on our own terms.
-    pub fn focus_next() -> Message {
-        widget::store::focus::focus_next()
-    }
-
-    /// Set the `Id` stored in this state as the focused one.
-    pub fn focus(&mut self) {
-        widget::store::focus::focus(&self.id);
-    }
-
-    /// Set the `Id` stored in this state as None.
-    pub fn unfocus(&mut self) {
-        widget::store::focus::unfocus(&self.id);
-    }
-}
-
-```
+## How We Teach This
+There are many simular existing guides and tutorials that can be used to teach this feature.
+- https://ngneat.github.io/elf/
+- It is similar to Redux, but easier to use by avoiding use of actions and dispatchers.
+- I can write documentation and best practices as part of the definition of done.
 
 ## Drawbacks
 > Why should we *not* do this?
@@ -509,3 +473,4 @@ I don't think we are designing an entirely new pattern here. We are just applyin
 > ## [Optional] Future possibilities
 
 - Developing and exposing a shared state pattern that can be used to store state in a global store. This would allow for the user to easily implement presistant state in their applications via a common pattern. This would obviously take another RFC and it might be an opportunity to create a more robust solution.
+- This pattern can also reach full time travel debugging capabilities. This is a feature that is not currently supported by Iced but could be added in the future.
