@@ -208,7 +208,7 @@ fn update(&mut self, message: Message) -> Command<Message> {
 ```
 As seen above we have mapped the directional pad on the gamepad to the keyboard events. This will allow us to navigate the widget tree with the gamepad. 
 
-For keyboard mapping we would need to map the gamepad messages to keyboard events. At this this time we do not desire to solve for a multi-platform keyboard virualization. In my scenerio linux I would use the evdev crate to map the gamepad events to keyboard events. On windows I would use the winapi crate to map the gamepad events to keyboard events. On mac I would use the core-graphics crate to map the gamepad events to keyboard events. This is out of scope for this RFC.
+For a compelte mapping we would need to map the gamepad messages to keyboard events. At this this time we do not desire to solve for a multi-platform keyboard virualization. In my scenerio linux I would use the evdev crate to map the gamepad events to keyboard events. On windows I would use the winapi crate to map the gamepad events to keyboard events. On mac I would use the core-graphics crate to map the gamepad events to keyboard events. This is out of scope for this RFC.
 
 > # Implementation strategy
 > ## The details of how we store and retrieve the focus state should be discussed here. The following code is an example of how this could be implemented. This is not meant to be a final solution but a starting point for discussion.
