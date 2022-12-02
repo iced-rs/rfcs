@@ -200,10 +200,10 @@ Gamepad navigation is achived by remapping gamepad events to keyboard events. In
 ```rs
 fn update(&mut self, message: Message) -> Command<Message> {
     match message {
-        Message::DRight => widget::store::ui::focus_next(),
-        Message::DLeft => widget::store::ui::focus_prev(),
         Message::DUp => widget::store::ui::focus_up(),
         Message::DDown => widget::store::ui::focus_down(),
+        Message::DLeft => widget::store::ui::focus_prev(),
+        Message::DRight => widget::store::ui::focus_next(),
         _ => (),
     }
 }
