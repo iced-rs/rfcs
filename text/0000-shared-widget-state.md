@@ -232,8 +232,8 @@ pub enum Message {
 }
 ```
 
-### Focusable Trait
-The `Focusable` trait will be used to store the `Id` of the widget and provide methods to update state.
+### FocusableWrite Trait
+The `FocusableWrite` trait will be used to store the `Id` of the widget and provide methods to update state.
 
 ```rs
 pub trait FocusableWrite {
@@ -244,7 +244,7 @@ pub trait FocusableWrite {
     pub fn unfocus(&mut self);
 }
 ```
-### Focusable Query Trait 
+### FocusableQuery Trait 
 The `FocusableQuery` trait will be used to query the focus state of the widget tree.
 
 ```rs
