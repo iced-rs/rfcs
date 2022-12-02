@@ -445,7 +445,7 @@ There are many simular existing guides and tutorials that can be used to teach t
 
 > What is the impact of not doing this?
 
-If we do not implement this, we will have to implement focus state on a widget by widget basis to achive this functionality. Or we will have to implement a dispatcher and action pattern to handle focus state. This will be more complicated to use and understand. And will be more difficult to implement.
+If we do not implement this, we will have to implement focus state on a widget by widget basis to achive this functionality. Or we will have to implement a dispatcher and action pattern to handle focus state.
 
 The last option is to continue with the pattern we have now. This will be the easiest to implement but will be the most defect prone especially with third-party widgets bring in unknown internal state.
 
