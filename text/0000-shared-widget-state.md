@@ -37,7 +37,7 @@ The widget would implement the read trait and the application would implement th
 
 > GOOD!
 ```mermaid
-  graph TD;
+  graph LR;
     Application-->Store;
     Store--Write-->State[(State)];
     Query--QueryMessage-->Widget
@@ -48,7 +48,7 @@ The widget would implement the read trait and the application would implement th
 Widgets could also implement the write trait if they need to update the focus state. This would be useful for widgets that are not focusable. For example a button widget that would not be focusable but it could be used to navigate the widget tree. However this is usally bad practice and should be avoided.
 > BAD!
 ```mermaid
-  graph TD;
+  graph RL;
     Store--Write-->State[(State)];
     Query--QueryMessage-->Widget
     State-->Query;
