@@ -421,7 +421,7 @@ There are many simular existing guides and tutorials that can be used to teach t
 
 - If we desire complete purity and do not wish to share state between widgets, this will not work. However, I believe that this is a good compromise between purity and usability.
 - If we desire to use a dispatchers and actions pattern, this will not work.
-- This will not support decorating widgets not owned by the user with focusability. We would need to consider how to implement a handler pattern or something for this.
+- This will not support decorating widgets not owned by the user with focusability. We would need to consider how to implement a handler pattern or something for this. This is also something that could be added later as a feature of `Widget`.
 
 ## Rationale and alternatives
 
