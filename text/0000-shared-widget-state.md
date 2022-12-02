@@ -66,16 +66,23 @@ Widgets could also implement the write trait if they need to update the focus st
 The first thing we need to implement is the write trait at the application level. This will allow the widget to update the focus state in the application state, but also allow Application itself to update the focus state on keyboard events.
 
 > Application Level
+A default implementation is provided so we can simply do this to implement the write trait.
+```rs
+struct State {}
+impl UIQuery for State {}
+```
+
+However you could implement the trait yourself if you wish to customize the behavior.
 ```rs
 impl UIUpdate for State {
     /// Sets the focused `Id` to the one stored in this state.
     pub fn focus(&mut self) {
-        widget::store::ui::focus(&self.id)
+        store::ui::focus(&self.id)
     }
 
     /// Sets the focused `Id` to `None`.
     pub fn unfocus(&mut self) {
-        widget::store::ui::unfocus()
+        store::ui::unfocus()
     }
 }
 ```
@@ -90,10 +97,10 @@ pub enum Message {
 fn update(&mut self, message: Message) -> Command<Message> {
     match message {
         Message::Focus(id:Id) => {
-            widget::store::ui::set_focus(&id);
+            store::ui::set_focus(&id);
         }
         Message::Unfocus(id:Id) => {
-            widget::store::ui::unset_focus(&id);
+            store::ui::unset_focus(&id);
         }
     }
 }
@@ -125,7 +132,7 @@ Lets also implement a read trait for on our widget.
 impl UIQuery for State {
     /// Returns true if the `Id` stored in this state is the focused one.
     pub fn is_focused(&self) -> bool {
-        widget::store::ui::is_focused(&self.id)
+        store::ui::is_focused(&self.id)
     }
 
     pub fn on_focus(&mut self, message: Self::Message) -> Command<Self::Message> {
@@ -188,7 +195,7 @@ fn subscription(&self) -> Subscription<Message> {
 
 fn update(&mut self, message: Message) -> Command<Message> {
     match message {
-        Message::TabPressed => widget::store::ui::focus_next(),
+        Message::TabPressed => store::ui::focus_next(),
     }
 }
 ```
@@ -200,10 +207,10 @@ Gamepad navigation is achived by remapping gamepad events to keyboard events. In
 ```rs
 fn update(&mut self, message: Message) -> Command<Message> {
     match message {
-        Message::DUp => widget::store::ui::focus_up(),
-        Message::DDown => widget::store::ui::focus_down(),
-        Message::DLeft => widget::store::ui::focus_prev(),
-        Message::DRight => widget::store::ui::focus_next(),
+        Message::DUp => store::ui::focus_up(),
+        Message::DDown => store::ui::focus_down(),
+        Message::DLeft => store::ui::focus_prev(),
+        Message::DRight => store::ui::focus_next(),
         _ => (),
     }
 }
