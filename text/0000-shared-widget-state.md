@@ -233,16 +233,6 @@ For a compelte mapping we would need to map the gamepad messages to keyboard eve
 > - It is reasonably clear how the feature would be implemented.
 > - Corner cases are dissected by example.
 
-
-### Focus Message
-To update our widgets we will generate a message with the widget leaving focus, and then another with the widget receiving focus.
-
-```rs
-pub enum Message {
-    Focused(Id),
-    Unfocused(Id),
-}
-```
 ### UIQuery Trait 
 The `UIQuery` trait will be used to query the focus state of the widget tree.
 
