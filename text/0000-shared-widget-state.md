@@ -436,6 +436,7 @@ There are many simular existing guides and tutorials that can be used to teach t
 > What other designs have been considered and what is the rationale for not choosing them?
 
 - I have considered using a `Focus` widget to handle focus. This would allow the user to wrap any widget in a `Focus` widget and it would handle focus for that widget. This would be a bit more complicated to use and would require the user to wrap every widget they want to be focusable in a `Focus` widget. This also can leans to a much more complex and object oriented design. And would create diffcult patterns to follow. See Flutters: https://docs.flutter.dev/development/ui/advanced/focus
+- I am in the favor of using a chain of responsiblity pattern or a handler pattern. This would allow the user to add focusability to any widget they desire in place of a complex proxy widget pattern.
 
 > What is the impact of not doing this?
 
