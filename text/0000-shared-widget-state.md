@@ -23,10 +23,10 @@ Supporting future shared state requirements.
 ### What is the expected outcome?
 We should be able to implement keyboard driven events to fully navigate and interact with an Iced UI with an agreed apon pattern, open discovery to a new RFC, or update the existing widgets to support this under the existing approach.
 
-It would be desirable to have a store that can be used to store focus state. This would allow focus state to be shared across the entire widget tree. This would also allow focus state to be updated in a single place and make it easier to keep focus state in sync across the entire widget tree.
+It would be desirable to implement a store pattern. This would allow focus state to be shared across the entire widget tree. It would also allow focus state to be updated in a single place and make it easier to keep state in sync across the entire widget tree.
 
 # Lets Set Our "Focus" On The Store
-It is also important that we implement a healthy pattern to manage focus state across the entire widget tree. This will allow us to implement keyboard driven events to fully navigate and interact with an Iced UI.
+It is important that we implement a healthy pattern to manage focus state across the entire widget tree. This will allow us to implement keyboard driven events to fully navigate and interact with an Iced UI.
 
 The focus store is made up for a few parts.
 - A state structure that stores the current focus state.
@@ -38,7 +38,7 @@ The widget would implement the read trait and the application would implement th
 > GOOD!
 ```mermaid
   graph TD;
-    Application--DirectCall-->Store;
+    Application--Write-->Store;
     Store-->State[(State)];
     Query--QueryMessage-->Widget
     Widget--UpdateMessage-->Application;
@@ -52,12 +52,47 @@ Widgets could also implement the write trait if they need to update the focus st
     Store-->State[(State)];
     Query--QueryMessage-->Widget
     State-->Query;
-    Widget--DirectCall-->Store;
+    Widget--Write-->Store;
 ```
 
 
-The first thing we need to implement is a unique widget Id for each focusable widget. This Id should be stored somewhere with your widgets internal state.
+The first thing we need to implement the write trait at the application level. This will allow the widget to update the focus state in the application state, but also allow Application itself to update the focus state on keyboard events.
 
+> Application Level
+```rs
+impl FocusableWrite for State {
+    /// Sets the focused `Id` to the one stored in this state.
+    pub fn focus(&mut self) {
+        widget::store::focus::focus(&self.id)
+    }
+
+    /// Sets the focused `Id` to `None`.
+    pub fn unfocus(&mut self) {
+        widget::store::focus::unfocus()
+    }
+}
+```
+
+Next we will implement a message type that will be used to update the focus state from a widget event.
+```rs
+pub enum Message {
+    Focus(Id),
+    Unfocus,
+}
+
+fn update(&mut self, message: Message) -> Command<Message> {
+    match message {
+        Message::Focus(id:Id) => {
+            widget::store::focus::set_focus(&id);
+        }
+        Message::Unfocus(id:Id) => {
+            widget::store::focus::unset_focus(&id);
+        }
+    }
+}
+```
+
+Now we need a unique Id for each focusable widget. This Id should be stored somewhere with your widgets internal state.
 > Widget Level
 ```rs
 struct State {
@@ -74,9 +109,9 @@ imple State {
 }
 ```
 
-Next we will need to implement a way to store or query the current focus state of the widget tree. This can be done by storing the current focus state in the application state. This will also allow us to access the current focus state from any widget in the widget tree.
+Next we need implement a way to query the current focus state of the widget tree.
 
-Lets implement a read trait for our application state.
+Lets implement a read trait for on our widget.
 
 > Widget Level
 ```rs
@@ -87,29 +122,11 @@ impl FocusableQuery for State {
     }
 
     pub fn on_focus(&mut self, message: Self::Message) -> Command<Self::Message> {
-        // QUESTION: I don't think this will be needed since we should be able to
-        // message the widget directly. I am not sure how to do this yet.
+        // this is a no-op at this time
     }
 
     pub fn on_unfocus(&mut self, message: Self::Message) -> Command<Self::Message> {
-        // QUESTION: I don't think this will be needed since we should be able to
-        // message the widget directly. I am not sure how to do this yet.
-    }
-}
-```
-
-Now we can implement to 'writing' behavior for our application state via messaging. This will allow the widget to update the focus state in the application state, but also allow Application itself to update the focus state.
-
-> Application Level
-```rs
-fn update(&mut self, message: Message) -> Command<Message> {
-    match message {
-        Message::Focus(id:Id) => {
-            widget::store::focus::set_focus(&id);
-        }
-        Message::Unfocus(id:Id) => {
-            widget::store::focus::unset_focus(&id);
-        }
+        // this is a no-op at this time
     }
 }
 ```
