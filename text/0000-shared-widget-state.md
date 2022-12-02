@@ -458,7 +458,7 @@ A few examples of what this can include are:
 
 > Does this feature exist in other GUI toolkits and what experience have their community had?
 
-This is the most common pattern in GUI frameworks. Here is one recent implementation.
+This is a common pattern in GUI frameworks. Here is one recent implementation.
 - https://ngneat.github.io/elf/
 
 Redux or MobX are patterns are similar to this proposal. They are also used to store state in a global store. This proposal is similar to those patterns but it does not rely on action or dispatchers. It also does not require the user to implement their own actions and dispatchers. While promoting reusability.
