@@ -243,35 +243,47 @@ pub enum Message {
     Unfocused(Id),
 }
 ```
-
-### FocusableWrite Trait
-The `FocusableWrite` trait will be used to store the `Id` of the widget and provide methods to update state.
+### UIQuery Trait 
+The `UIQuery` trait will be used to query the focus state of the widget tree.
 
 ```rs
-pub trait FocusableWrite {
-    /// Set the `Id` stored in this state as the focused one.
-    pub fn focus(&mut self);
+pub trait UIQuery {
+    fn set_focus_id(id: &Id);
+    fn unset_focus_id(id: &Id);
+    fn clear_focus_id();
+}
+```
 
-    /// Set the `Id` stored in this state as None.
+Its implementation might look like so
+```rs
+    fn get_focus_id() -> Option<Id> {
+        UI_STATE.lock_ref().focus_id.clone()
+    }
+    
+    fn is_focused(id: &Option<Id>) -> bool {
+        if id.is_none() {
+            return false;
+        }
+        &Self::get_focus_id() == id
+    }
+    
+    fn signal() -> MutableSignalCloned<UIState> {
+        UI_STATE.signal_cloned()
+    }
+```
+
+
+### UIWrite Trait
+The `UIWrite` trait will be used to store the `Id` of the widget and provide methods to update state.
+
+```rs
+pub trait UIWrite {
+    pub fn focus(&mut self);
     pub fn unfocus(&mut self);
 }
 ```
-### FocusableQuery Trait 
-The `FocusableQuery` trait will be used to query the focus state of the widget tree.
 
-```rs
-pub trait FocusableQuery {
-    pub fn is_focused(&self) -> bool;
-
-    pub fn on_focus(&mut self, message: Self::Message) -> Command<Self::Message>;
-
-    pub fn on_unfocus(&mut self, message: Self::Message) -> Command<Self::Message>;
-}
-```
-### Focus Store
-
-The focus store will be used to store the current focus state of the widget tree. This will allow us to query the current focus state of the widget tree and update the focus state of the widget tree.
-
+And its implementation would look something like this.
 ```rs
 struct State {}
 impl UIQuery for State {}
@@ -301,7 +313,7 @@ pub trait UIWriter {
 }
 ``` 
 
-### Focus Methods
+### UIWriter Focus Methods
 This is an example of how we could implement the default focus methods on the `UIWrite` trait.
 
 ```rs
@@ -335,8 +347,8 @@ pub fn focus_next() {
 }
 ```
 > The section should return to the examples given in the previous section, and explain more fully how the detailed proposal makes those examples work.
-As your can see from the examples above, the `Focusable` trait will be used to store the focus state of a widget. The `FocusableQuery` trait will be used to query the focus state of a widget. The `focus_next`, `focus_prev`, `focus_up`, and `focus_down` methods will be used to update the focus state of the widget tree.
 
+As your can see from the examples above, the `UIWriter` trait will be used to update the focus state of a widget. The `UIQuery` trait will be used to recieve the focus state. The `focus_next`, `focus_prev`, `focus_up`, and `focus_down` methods will be used to update the focus state of the widget tree.
 
 ## How We Teach This
 There are many simular existing guides and tutorials that can be used to teach this feature.
