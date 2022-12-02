@@ -419,7 +419,6 @@ There are many simular existing guides and tutorials that can be used to teach t
 ## Drawbacks
 > Why should we *not* do this?
 
-- There may be a better way to handle focus that is more flexible and easier to use.
 - If we desire complete purity and do not wish to share state between widgets, this will not work. However, I believe that this is a good compromise between purity and usability.
 - If we desire to use a dispatchers and actions pattern, this will not work.
 - This will not support decorating widgets not owned by the user with focusability. We would need to consider how to implement a handler pattern or something for this.
