@@ -180,7 +180,7 @@ The focus store is made up for a few parts.
 - A read trait that allows widgets to query the current focus state.
 - A write trait that allows widgets to update the current focus state.
 
-The widget would implement the read trait and the application would implement the write trait. This will allow the application to update the focus state and the widgets to query the focus state. 
+The widget would implement the read trait and the application would implement the write trait. This will allow the application to update the focus state and the widgets to query the focus state. Since the application is the only one that can update the focus state it can also handle the keyboard events and update the focus state.
 
 > GOOD!
 ```mermaid
@@ -192,8 +192,7 @@ The widget would implement the read trait and the application would implement th
     State-->Query;
 ```
 
-Widgets would also be able to update the focus state but this is not recommended.
-Ideally the widget should delegate the focus state to the application. This will allow the application to coordinate the focus state of the widget tree. Since the application is the only one that can update the focus state it can also handle the keyboard events and update the focus state.
+Widgets could also implement the write trait if they need to update the focus state. This would be useful for widgets that are not focusable. For example a button widget that would not be focusable but it could be used to navigate the widget tree. However this is usally bad practice and should be avoided.
 > BAD!
 ```mermaid
   graph TD;
