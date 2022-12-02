@@ -38,8 +38,8 @@ The widget would implement the read trait and the application would implement th
 > GOOD!
 ```mermaid
   graph TD;
-    Application--Write-->Store;
-    Store-->State[(State)];
+    Application-->Store;
+    Store--Write-->State[(State)];
     Query--QueryMessage-->Widget
     Widget--UpdateMessage-->Application;
     State-->Query;
