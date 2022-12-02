@@ -41,12 +41,12 @@ The widget would implement the read trait and the application would implement th
 
 ```mermaid
   graph LR;
-    Application--Call-->Store;
-    Store--Write-->State[(State)];
-    Query--Signal-->Widget
+    Application--Call-->UIUpdate;
+    UIUpdate([UIUpdate])--Write-->State[(State)];
+    UIQuery([UIQuery])--Signal-->Widget
     Widget-->Draw{{Draw}} 
     Widget--UpdateMessage-->Application;
-    State-->Query;
+    State-->UIQuery;
 ```
 
 
@@ -55,10 +55,10 @@ The widget would implement the read trait and the application would implement th
 Widgets could also implement the write trait if they need to update the focus state. This would be useful for widgets that are not focusable. For example a button widget that would not be focusable but it could be used to navigate the widget tree. However this is usally bad practice and should be avoided.
 ```mermaid
   graph LR;
-    Store--Write-->State[(State)];
-    Query--Signal-->Widget
-    State-->Query;
-    Widget--Call-->Store;
+    UIUpdate([UIUpdate])--Write-->State[(State)];
+    UIQuery([UIQuery])--Signal-->Widget
+    State-->UIQuery;
+    Widget--Call-->UIUpdate;
     Widget-->Draw{{Draw}}
 ```
 
@@ -67,7 +67,7 @@ The first thing we need to implement is the write trait at the application level
 
 > Application Level
 ```rs
-impl FocusableWrite for State {
+impl UIUpdate for State {
     /// Sets the focused `Id` to the one stored in this state.
     pub fn focus(&mut self) {
         widget::store::ui::focus(&self.id)
@@ -122,7 +122,7 @@ Lets also implement a read trait for on our widget.
 
 > Widget Level
 ```rs
-impl FocusableQuery for State {
+impl UIQuery for State {
     /// Returns true if the `Id` stored in this state is the focused one.
     pub fn is_focused(&self) -> bool {
         widget::store::ui::is_focused(&self.id)
