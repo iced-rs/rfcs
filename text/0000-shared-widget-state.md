@@ -41,8 +41,8 @@ The widget would implement the read trait and the application would implement th
 
 ```mermaid
   graph LR;
-    Application--Call-->UIUpdate;
-    UIUpdate([UIUpdate])--Write-->State[(State)];
+    Application--Call-->UIWrite;
+    UIWrite([UIWrite])--Write-->State[(State)];
     UIQuery([UIQuery])--Signal-->Widget
     Widget-->Draw{{Draw}} 
     Widget--UpdateMessage-->Application;
@@ -55,39 +55,58 @@ The widget would implement the read trait and the application would implement th
 Widgets could also implement the write trait if they need to update the focus state. This would be useful for widgets that are not focusable. For example a button widget that would not be focusable but it could be used to navigate the widget tree. However this is usally bad practice and should be avoided.
 ```mermaid
   graph LR;
-    UIUpdate([UIUpdate])--Write-->State[(State)];
+    UIWrite([UIWrite])--Write-->State[(State)];
     UIQuery([UIQuery])--Signal-->Widget
     State-->UIQuery;
-    Widget--Call-->UIUpdate;
+    Widget--Call-->UIWrite;
     Widget-->Draw{{Draw}}
 ```
 
 
 The first thing we need to implement is the write trait at the application level. This will allow the widget to update the focus state in the application state, but also allow Application itself to update the focus state on keyboard events.
 
-> Application Level
+> ## Application Level
+
 A default implementation is provided so we can simply do this to implement the write trait.
 ```rs
 struct State {}
-impl UIQuery for State {}
+impl UIWrite for State {}
 ```
 
-However you could implement the trait yourself if you wish to customize the behavior.
+However you could implement the trait yourself or override the default implementation if you want to customize the behavior.
+
+Lets take a moment and  look at the default implementation. It will look alot like a reducer pattern. The default implementation will take the current state update the focus state and update the global lock state. This is important because the widget tree is mutable and we need to prevent the focus state from being updated by multiple widgets at the same time. 
+
 ```rs
-impl UIUpdate for State {
-    /// Sets the focused `Id` to the one stored in this state.
-    pub fn focus(&mut self) {
-        store::ui::focus(&self.id)
+
+pub trait UIUpdate {
+    fn set_focus_id(id: &Id) {
+        UI_STATE.lock_mut().focus_id = Some(id.clone());
     }
 
-    /// Sets the focused `Id` to `None`.
-    pub fn unfocus(&mut self) {
-        store::ui::unfocus()
+    fn unset_focus_id(id: &Id) {
+        if State::is_focused(&Some(id.clone())) {
+            let mut lock = UI_STATE.lock_mut();
+            *lock = UIState {
+                focus_id: None,
+                ..*lock
+            };
+        }
+    }
+
+    fn clear_focus_id() {
+        let mut lock = UI_STATE.lock_mut();
+        *lock = UIState {
+            focus_id: None,
+            ..*lock
+        };
     }
 }
+
+
 ```
 
-Next we will implement a message type that will be used to update the focus state from a widget event.
+Next we will implement a message type that will be used to update the focus state from a widget event like a button click.
 ```rs
 pub enum Message {
     Focus(Id),
@@ -97,17 +116,17 @@ pub enum Message {
 fn update(&mut self, message: Message) -> Command<Message> {
     match message {
         Message::Focus(id:Id) => {
-            store::ui::set_focus(&id);
+            UIWrite::set_focus(&id);
         }
         Message::Unfocus(id:Id) => {
-            store::ui::unset_focus(&id);
+            UIWrite::unset_focus(&id);
         }
     }
 }
 ```
 
 Now we need a unique Id for each focusable widget. This Id should be stored somewhere with your widgets internal state.
-> Widget Level
+> ## Widget Level
 ```rs
 struct State {
     id: Id
@@ -123,33 +142,17 @@ imple State {
 }
 ```
 
-Next we need implement a way to query the current focus state of the widget tree.
+We also implement the default read trait for on our widget and being watching for state changes.
 
-Lets also implement a read trait for on our widget.
-
-> Widget Level
 ```rs
-impl UIQuery for State {
-    /// Returns true if the `Id` stored in this state is the focused one.
-    pub fn is_focused(&self) -> bool {
-        store::ui::is_focused(&self.id)
-    }
-
-    pub fn on_focus(&mut self, message: Self::Message) -> Command<Self::Message> {
-        // this is a no-op at this time
-    }
-
-    pub fn on_unfocus(&mut self, message: Self::Message) -> Command<Self::Message> {
-        // this is a no-op at this time
-    }
-}
+struct State {}
+impl UIQuery for State {}
 ```
 
 We should display the focused widget in some way to the user. This can be done by adding a border around the widget or changing the color of the widget.
 
 Your draw function should implement something like this.
 
-> Widget Level
 ```rs
 // Is the mouse over the widget?
 let is_hovered = bounds.contains(cursor_position);
