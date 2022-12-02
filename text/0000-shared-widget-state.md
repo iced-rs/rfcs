@@ -49,10 +49,10 @@ Widgets could also implement the write trait if they need to update the focus st
 > BAD!
 ```mermaid
   graph TD;
-    Store-->State[(State)];
+    Store--Write-->State[(State)];
     Query--QueryMessage-->Widget
     State-->Query;
-    Widget--Write-->Store;
+    Widget-->Store;
 ```
 
 
