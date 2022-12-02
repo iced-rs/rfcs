@@ -193,7 +193,7 @@ fn update(&mut self, message: Message) -> Command<Message> {
 
 ### Gamepad Navigation
 
-Gamepad navigation is achived by remapping gamepad events to keyboard events. In this example I will be using an imaginary crate to handle gamepad events. This crate will be used to map gamepad events to keyboard events and then send them to the `Application` trait for handling via messages.
+Gamepad navigation is achived by remapping gamepad events to keyboard events. In this example I will be using an imaginary crate to handle gamepad events. This crate would be used to map gamepad events and emit them as a `Message` to your application.
 
 ```rs
 fn update(&mut self, message: Message) -> Command<Message> {
