@@ -1,17 +1,13 @@
 # Global Store: Focus
 
-> # Status: Discussing
-
-> I am still discovering the best way to do this with Iced. I will update this RFC as I learn more, as I am lacking critical knowledge around the widget lifecycle and messaging.
+>>> ## Status: Discussing
+>>> I am still discovering the best way to do this with Iced. I will update this RFC as I learn more, as I am lacking critical knowledge around the widget lifecycle and messaging.
 
 ## Summary
-> One paragraph explanation of the feature.
 
 This proposal introduces a global store concept to facilitate shared state between widgets. The store is designed to be a single source of truth for a given widget tree. It is managed by a centralized controller and is accessible to all widgets in the application. The store is meant to be used as a domain oriented (widgets) state management tool and should not be used as a replacement for existing state management patterns.
 
 ## Motivation
-> Why are we doing this? What use cases does it support? What is the expected outcome?
-
 ### Why are we doing this?
 Many projects need mouse, keyboard, and or gamepad interactions with Iced widgets. This will require a robust solution for focus management. I have found managing replicated state across the widgets to be an unruly pattern. I hope this RFC can help discover the best possible course of action for Iced even if it just starts a more serious conversation to another iteration of approach.
 
@@ -29,16 +25,40 @@ We should be able to implement keyboard driven events to fully navigate and inte
 
 It would be desirable to have a store that can be used to store focus state. This would allow focus state to be shared across the entire widget tree. This would also allow focus state to be updated in a single place and make it easier to keep focus state in sync across the entire widget tree.
 
-## Guide-level explanation
+# Lets Set Our "Focus" On The Store
+It is also important that we implement a healthy pattern to manage focus state across the entire widget tree. This will allow us to implement keyboard driven events to fully navigate and interact with an Iced UI.
 
-> Explain the proposal as if it was already included in the library and you were teaching it to another iced programmer. That generally means.
+The focus store is made up for a few parts.
+- A state structure that stores the current focus state.
+- A read trait that allows widgets to query the current focus state.
+- A write trait that allows widgets to update the current focus state.
 
-> Explaining the feature largely in terms of examples.
+The widget would implement the read trait and the application would implement the write trait. This will allow the application to update the focus state and the widgets to query the focus state. Since the application is the only one that can update the focus state it can also handle the keyboard events and update the focus state.
 
-It is imperative that when designing widgets for your application that you include keyboard events in your widgets to enable keyboard access and by extention through event mapping gamepads or other devices.
+> GOOD!
+```mermaid
+  graph TD;
+    Application--DirectCall-->Store;
+    Store-->State[(State)];
+    Query--QueryMessage-->Widget
+    Widget--UpdateMessage-->Application;
+    State-->Query;
+```
+
+Widgets could also implement the write trait if they need to update the focus state. This would be useful for widgets that are not focusable. For example a button widget that would not be focusable but it could be used to navigate the widget tree. However this is usally bad practice and should be avoided.
+> BAD!
+```mermaid
+  graph TD;
+    Store-->State[(State)];
+    Query--QueryMessage-->Widget
+    State-->Query;
+    Widget--DirectCall-->Store;
+```
+
 
 The first thing we need to implement is a unique widget Id for each focusable widget. This Id should be stored somewhere with your widgets internal state.
 
+> Widget Level
 ```rs
 struct State {
     id: Id
@@ -57,6 +77,8 @@ imple State {
 Next we will need to implement a way to store or query the current focus state of the widget tree. This can be done by storing the current focus state in the application state. This will also allow us to access the current focus state from any widget in the widget tree.
 
 Lets implement a read trait for our application state.
+
+> Widget Level
 ```rs
 impl FocusableQuery for State {
     /// Returns true if the `Id` stored in this state is the focused one.
@@ -76,24 +98,27 @@ impl FocusableQuery for State {
 }
 ```
 
-And a write trait for our application state.
-```rs
-impl Focusable for State {
-    /// Set the `Id` stored in this state as the focused one.
-    pub fn focus(&mut self) {
-        widget::store::focus::focus(&self.id);
-    }
+Now we can implement to 'writing' behavior for our application state via messaging. This will allow the widget to update the focus state in the application state, but also allow Application itself to update the focus state.
 
-    /// Set the `Id` stored in this state as None.
-    pub fn unfocus(&mut self) {
-        widget::store::focus::unfocus(&self.id);
+> Application Level
+```rs
+fn update(&mut self, message: Message) -> Command<Message> {
+    match message {
+        Message::Focus(id:Id) => {
+            widget::store::focus::set_focus(&id);
+        }
+        Message::Unfocus(id:Id) => {
+            widget::store::focus::unset_focus(&id);
+        }
     }
 }
 ```
 
 We should display the focused widget in some way to the user. This can be done by adding a border around the widget or changing the color of the widget.
+
 Your draw function should implement something like this.
 
+> Widget Level
 ```rs
 // Is the mouse over the widget?
 let is_hovered = bounds.contains(cursor_position);
@@ -115,6 +140,8 @@ let mut styling = if !is_enabled {
 
 ```
 > Explaining how iced programmers should *think* about the feature, and how it should impact the way they use iced. It should explain the impact as concretely as possible.
+
+
 
 By following this pattern we should be able to coordinate the focus state of the widget tree and display the focused widget to the user. While this is a good start we still need to implement a way to navigate the widget tree with the keyboard.
 
@@ -174,33 +201,6 @@ For keyboard mapping we would need to map the gamepad messages to keyboard event
 > - It is reasonably clear how the feature would be implemented.
 > - Corner cases are dissected by example.
 
-### The Focus Store
-The focus store is made up for a few parts.
-- A state structure that stores the current focus state.
-- A read trait that allows widgets to query the current focus state.
-- A write trait that allows widgets to update the current focus state.
-
-The widget would implement the read trait and the application would implement the write trait. This will allow the application to update the focus state and the widgets to query the focus state. Since the application is the only one that can update the focus state it can also handle the keyboard events and update the focus state.
-
-> GOOD!
-```mermaid
-  graph TD;
-    Application--DirectCall-->Store;
-    Store-->State[(State)];
-    Query--QueryMessage-->Widget
-    Widget--UpdateMessage-->Application;
-    State-->Query;
-```
-
-Widgets could also implement the write trait if they need to update the focus state. This would be useful for widgets that are not focusable. For example a button widget that would not be focusable but it could be used to navigate the widget tree. However this is usally bad practice and should be avoided.
-> BAD!
-```mermaid
-  graph TD;
-    Store-->State[(State)];
-    Query--QueryMessage-->Widget
-    State-->Query;
-    Widget--DirectCall-->Store;
-```
 
 ### Focus Message
 To update our widgets we will generate a message with the widget leaving focus, and then another with the widget receiving focus.
@@ -458,6 +458,9 @@ impl Focusable for State {
 > What is the impact of not doing this?
 
 I think this really debates on global vs distributed local mutability. I think this is a good example of where global mutability is the best option. It allows for the user to easily implement focus on any widget and it allows for the user to implement their own focus logic if they desire. In the end we take nothing away from the user and we give them a global source of truth for focus.
+
+
+
 
 ## [Optional] Prior art
 
