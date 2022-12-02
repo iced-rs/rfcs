@@ -268,35 +268,46 @@ pub trait FocusableQuery {
     pub fn on_unfocus(&mut self, message: Self::Message) -> Command<Self::Message>;
 }
 ```
-
-> ## WARNING!! THIS IS ALL SPECULATIVE IMPLEMENTATION BELOW.
-> ## BEGIN UNVETTED BRAIN DUMP
-
 ### Focus Store
 
 The focus store will be used to store the current focus state of the widget tree. This will allow us to query the current focus state of the widget tree and update the focus state of the widget tree.
 
 ```rs
-pub fn is_focused(id: &Id) -> bool {
-    FOCUS.with(|focus| focus.borrow().as_ref() == Some(id))
-}
+struct State {}
+impl UIQuery for State {}
 
-pub fn focus(id: &Id) {
-    FOCUS.with(|focus| focus.replace(Some(id.clone())));
-}
+pub trait UIWriter {
+    fn set_focus_id(id: &Id) {
+        UI_STATE.lock_mut().focus_id = Some(id.clone());
+    }
 
-pub fn unfocus(id: &Id) {
-    FOCUS.with(|focus| focus.replace(None));
+    fn unset_focus_id(id: &Id) {
+        if State::is_focused(&Some(id.clone())) {
+            let mut lock = UI_STATE.lock_mut();
+            *lock = UIState {
+                focus_id: None,
+                ..*lock
+            };
+        }
+    }
+
+    fn clear_focus_id() {
+        let mut lock = UI_STATE.lock_mut();
+        *lock = UIState {
+            focus_id: None,
+            ..*lock
+        };
+    }
 }
 ``` 
 
-
-### Focus Next
-This method will be used to focus the next widget in the widget tree.
+### Focus Methods
+This is an example of how we could implement the default focus methods on the `UIWrite` trait.
 
 ```rs
-pub fn focus_next() -> Message {
-    let mut focus = FOCUS.with(|focus| focus.borrow().clone());
+pub fn focus_next() {
+    // Take 1 from the current focus id.
+    let mut focus = FocusQuery::focus_id();
     let mut next = None;
 
     if let Some(id) = focus {
@@ -319,110 +330,10 @@ pub fn focus_next() -> Message {
         focus.replace(Some(id));
     }
 
-    FOCUS.with(|focus| focus.replace(focus.clone()));
-    Message::None
+    // update the ui state
+    UIWriter::set_focus_id(focus.clone());
 }
 ```
-
-### Focus Prev
-This is the same as `focus_next` but instead of incrementing the index we decrement it.
-
-```rs
-pub fn focus_prev() -> Message {
-    let mut focus = FOCUS.with(|focus| focus.borrow().clone());
-    let mut next = None;
-
-    if let Some(id) = focus {
-        let mut ids = IDS.with(|ids| ids.borrow().clone());
-        let mut index = ids.iter().position(|i| i == &id).unwrap_or(0);
-
-        if index > 0 {
-            index -= 1;
-        } else {
-            index = ids.len() - 1;
-        }
-
-        next = Some(ids[index].clone());
-    } else {
-        let ids = IDS.with(|ids| ids.borrow().clone());
-        next = Some(ids[0].clone());
-    }
-
-    if let Some(id) = next {
-        focus.replace(Some(id));
-    }
-
-    FOCUS.with(|focus| focus.replace(focus.clone()));
-    Message::None
-}
-```
-
-### Focus Up
-This is a bit more complicated than the other focus methods. This method will find the closest widget above the current focused widget and focus it. This will allow us to navigate the widget tree in a grid like fashion.
-
-```rs
-pub fn focus_up() -> Message {
-    let mut focus = FOCUS.with(|focus| focus.borrow().clone());
-    let mut next = None;
-
-    if let Some(id) = focus {
-        let mut ids = IDS.with(|ids| ids.borrow().clone());
-        let mut index = ids.iter().position(|i| i == &id).unwrap_or(0);
-
-        if index > 0 {
-            index -= 1;
-        } else {
-            index = ids.len() - 1;
-        }
-
-        next = Some(ids[index].clone());
-    } else {
-        let ids = IDS.with(|ids| ids.borrow().clone());
-        next = Some(ids[0].clone());
-    }
-
-    if let Some(id) = next {
-        focus.replace(Some(id));
-    }
-
-    FOCUS.with(|focus| focus.replace(focus.clone()));
-    Message::None
-}
-```
-
-### Focus Down
-This is a bit more complicated than the other focus methods. This method will find the closest widget below the current focused widget and focus it. This will allow us to navigate the widget tree in a grid like fashion.
-
-```rs
-pub fn focus_down() -> Message {
-    let mut focus = FOCUS.with(|focus| focus.borrow().clone());
-    let mut next = None;
-
-    if let Some(id) = focus {
-        let mut ids = IDS.with(|ids| ids.borrow().clone());
-        let mut index = ids.iter().position(|i| i == &id).unwrap_or(0);
-
-        if index < ids.len() - 1 {
-            index += 1;
-        } else {
-            index = 0;
-        }
-
-        next = Some(ids[index].clone());
-    } else {
-        let ids = IDS.with(|ids| ids.borrow().clone());
-        next = Some(ids[0].clone());
-    }
-
-    if let Some(id) = next {
-        focus.replace(Some(id));
-    }
-
-    FOCUS.with(|focus| focus.replace(focus.clone()));
-    Message::None
-}
-```
-> ## END UNVETTED BRAIN DUMP
 > The section should return to the examples given in the previous section, and explain more fully how the detailed proposal makes those examples work.
 As your can see from the examples above, the `Focusable` trait will be used to store the focus state of a widget. The `FocusableQuery` trait will be used to query the focus state of a widget. The `focus_next`, `focus_prev`, `focus_up`, and `focus_down` methods will be used to update the focus state of the widget tree.
 
