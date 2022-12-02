@@ -44,7 +44,7 @@ The widget would implement the read trait and the application would implement th
     Application--Call-->Store;
     Store--Write-->State[(State)];
     Query--Signal-->Widget
-    Widget-->Draw{{Draw}}
+    Widget-->Draw{{Draw}} 
     Widget--UpdateMessage-->Application;
     State-->Query;
 ```
@@ -70,12 +70,12 @@ The first thing we need to implement is the write trait at the application level
 impl FocusableWrite for State {
     /// Sets the focused `Id` to the one stored in this state.
     pub fn focus(&mut self) {
-        widget::store::focus::focus(&self.id)
+        widget::store::ui::focus(&self.id)
     }
 
     /// Sets the focused `Id` to `None`.
     pub fn unfocus(&mut self) {
-        widget::store::focus::unfocus()
+        widget::store::ui::unfocus()
     }
 }
 ```
@@ -90,10 +90,10 @@ pub enum Message {
 fn update(&mut self, message: Message) -> Command<Message> {
     match message {
         Message::Focus(id:Id) => {
-            widget::store::focus::set_focus(&id);
+            widget::store::ui::set_focus(&id);
         }
         Message::Unfocus(id:Id) => {
-            widget::store::focus::unset_focus(&id);
+            widget::store::ui::unset_focus(&id);
         }
     }
 }
@@ -125,7 +125,7 @@ Lets also implement a read trait for on our widget.
 impl FocusableQuery for State {
     /// Returns true if the `Id` stored in this state is the focused one.
     pub fn is_focused(&self) -> bool {
-        widget::store::focus::is_focused(&self.id)
+        widget::store::ui::is_focused(&self.id)
     }
 
     pub fn on_focus(&mut self, message: Self::Message) -> Command<Self::Message> {
@@ -188,7 +188,7 @@ fn subscription(&self) -> Subscription<Message> {
 
 fn update(&mut self, message: Message) -> Command<Message> {
     match message {
-        Message::TabPressed => widget::store::focus::focus_next(),
+        Message::TabPressed => widget::store::ui::focus_next(),
     }
 }
 ```
@@ -200,10 +200,10 @@ Gamepad navigation is achived by remapping gamepad events to keyboard events. In
 ```rs
 fn update(&mut self, message: Message) -> Command<Message> {
     match message {
-        Message::DRight => widget::store::focus::focus_next(),
-        Message::DLeft => widget::store::focus::focus_prev(),
-        Message::DUp => widget::store::focus::focus_up(),
-        Message::DDown => widget::store::focus::focus_down(),
+        Message::DRight => widget::store::ui::focus_next(),
+        Message::DLeft => widget::store::ui::focus_prev(),
+        Message::DUp => widget::store::ui::focus_up(),
+        Message::DDown => widget::store::ui::focus_down(),
         _ => (),
     }
 }
