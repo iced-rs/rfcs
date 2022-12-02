@@ -198,7 +198,7 @@ fn subscription(&self) -> Subscription<Message> {
 
 fn update(&mut self, message: Message) -> Command<Message> {
     match message {
-        Message::TabPressed => store::ui::focus_next(),
+        Message::TabPressed => UIWrite::focus_next(),
     }
 }
 ```
@@ -210,10 +210,10 @@ Gamepad navigation is achived by remapping gamepad events to keyboard events. In
 ```rs
 fn update(&mut self, message: Message) -> Command<Message> {
     match message {
-        Message::DUp => store::ui::focus_up(),
-        Message::DDown => store::ui::focus_down(),
-        Message::DLeft => store::ui::focus_prev(),
-        Message::DRight => store::ui::focus_next(),
+        Message::DUp => UIWrite::focus_up(),
+        Message::DDown => UIWrite::focus_down(),
+        Message::DLeft => UIWrite::focus_prev(),
+        Message::DRight => UIWrite::focus_next(),
         _ => (),
     }
 }
