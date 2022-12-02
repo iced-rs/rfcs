@@ -406,14 +406,13 @@ pub fn focus_down() -> Message {
 }
 ```
 > ## END UNVETTED BRAIN DUMP
-
 > The section should return to the examples given in the previous section, and explain more fully how the detailed proposal makes those examples work.
 As your can see from the examples above, the `Focusable` trait will be used to store the focus state of a widget. The `FocusableQuery` trait will be used to query the focus state of a widget. The `focus_next`, `focus_prev`, `focus_up`, and `focus_down` methods will be used to update the focus state of the widget tree.
 
 
 ## How We Teach This
 There are many simular existing guides and tutorials that can be used to teach this feature.
-- https://ngneat.github.io/elf/
+- This implementation is a feature rich variant of this pattern https://ngneat.github.io/elf/
 - It is similar to Redux, but easier to use by avoiding use of actions and dispatchers.
 - I can write documentation and best practices as part of the definition of done.
 
@@ -422,26 +421,28 @@ There are many simular existing guides and tutorials that can be used to teach t
 
 - There may be a better way to handle focus that is more flexible and easier to use.
 - If we desire complete purity and do not wish to share state between widgets, this will not work. However, I believe that this is a good compromise between purity and usability.
+- If we desire to use a dispatchers and actions pattern, this will not work.
+- This will not support decorating widgets not owned by the user with focusability. We would need to consider how to implement a handler pattern or something for this.
 
 ## Rationale and alternatives
 
 > Why is this design the best in the space of possible designs?
 
-- Its very easy to use and understand. 
-- It is also very flexible and can be used to implement focus on any widget. 
-- It also allows for the user to implement their own focus logic if they desire.
-- It doesnt deviate from the current API too much.
+- Very easy to use and understand. 
+- Easy to replicate the pattern without getting it wrong.
+- Flexible and can be used to implement focus on any widget.
+- Allows for the user to implement their own focus logic if they desire.
+- It wouldn't be a difficult guide to write. Easy to learn, easy to use.
 
 > What other designs have been considered and what is the rationale for not choosing them?
 
-- I have considered using a `Focus` widget to handle focus. This would allow the user to wrap any widget in a `Focus` widget and it would handle focus for that widget. This would be a bit more complicated to use and would require the user to wrap every widget they want to be focusable in a `Focus` widget. This would also require the user to implement their own focus logic. This also can leans to a much more complex and object oriented design. See Flutters: https://docs.flutter.dev/development/ui/advanced/focus
+- I have considered using a `Focus` widget to handle focus. This would allow the user to wrap any widget in a `Focus` widget and it would handle focus for that widget. This would be a bit more complicated to use and would require the user to wrap every widget they want to be focusable in a `Focus` widget. This also can leans to a much more complex and object oriented design. And would create diffcult patterns to follow. See Flutters: https://docs.flutter.dev/development/ui/advanced/focus
 
 > What is the impact of not doing this?
 
-I think this really debates on global vs distributed local mutability. I think this is a good example of where global mutability is the best option. It allows for the user to easily implement focus on any widget and it allows for the user to implement their own focus logic if they desire. In the end we take nothing away from the user and we give them a global source of truth for focus.
+If we do not implement this, we will have to implement focus state on a widget by widget basis to achive this functionality. Or we will have to implement a dispatcher and action pattern to handle focus state. This will be more complicated to use and understand. And will be more difficult to implement.
 
-
-
+The last option is to continue with the pattern we have now. This will be the easiest to implement, but will be the most difficult to use and understand. And will be the most defect prone especially with third-party widgets bring in unknown internal state.
 
 ## [Optional] Prior art
 
@@ -452,11 +453,19 @@ A few examples of what this can include are:
 
 > Does this feature exist in other GUI toolkits and what experience have their community had?
 
-This proposal is a store oriented pattern. This is the most common pattern in GUI frameworks. I have not seen it implemented in a way that is as easy to use as this proposal. Redux or MobX are patterns are similar to this proposal. They are also used to store state in a global store. This proposal is similar to those patterns but it is used to store state by its domain. This approach will fill familiar to many users.
+This is the most common pattern in GUI frameworks. Here is one recent implementation.
+- https://ngneat.github.io/elf/
+
+Redux or MobX are patterns are similar to this proposal. They are also used to store state in a global store. This proposal is similar to those patterns but it does not rely on action or dispatchers. It also does not require the user to implement their own actions and dispatchers. While promoting reusability.
 
 > Are there any published papers or great posts that discuss this? If you have some relevant papers to refer to, this can serve as a more detailed theoretical background.
 
+- https://netbasal.com/introducing-akita-a-new-state-management-pattern-for-angular-applications-f2f0fab5a8
+- https://engineering.datorama.com/akita-react-hooks-a-recipe-for-sensational-state-management-2fd077c6237c
+
 I don't think we are designing an entirely new pattern here. We are just applying a pattern that is already used in other domains to the GUI domain. We do not intend to reinvent the wheel or solve for a complete state management solution to application developers.
+
+However it could be the start of a nice state management solution as it matures. I believe it is a strong foundation for a state management solution.
 
 ## Unresolved questions
 
