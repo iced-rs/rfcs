@@ -49,7 +49,7 @@ The widget would implement the read trait and the application would implement th
 ```
 
 
-> SOMETIMES OKAY BUT !
+> NOT SO GOOD !
 
 Widgets could also implement the write trait if they need to update the focus state. This would be useful for widgets that are not focusable. For example a button widget that would not be focusable but it could be used to navigate the widget tree. However this is usally bad practice and should be avoided.
 ```mermaid
@@ -61,7 +61,7 @@ Widgets could also implement the write trait if they need to update the focus st
 ```
 
 
-The first thing we need to implement the write trait at the application level. This will allow the widget to update the focus state in the application state, but also allow Application itself to update the focus state on keyboard events.
+The first thing we need to implement is the write trait at the application level. This will allow the widget to update the focus state in the application state, but also allow Application itself to update the focus state on keyboard events.
 
 > Application Level
 ```rs
