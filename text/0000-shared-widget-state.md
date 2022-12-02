@@ -43,7 +43,8 @@ The widget would implement the read trait and the application would implement th
   graph LR;
     Application--Call-->Store;
     Store--Write-->State[(State)];
-    Query--QueryMessage-->Widget
+    Query--Signal-->Widget
+    Widget-->Draw{{Draw}}
     Widget--UpdateMessage-->Application;
     State-->Query;
 ```
@@ -55,9 +56,10 @@ Widgets could also implement the write trait if they need to update the focus st
 ```mermaid
   graph LR;
     Store--Write-->State[(State)];
-    Query--QueryMessage-->Widget
+    Query--Signal-->Widget
     State-->Query;
     Widget--Call-->Store;
+    Widget-->Draw{{Draw}}
 ```
 
 
