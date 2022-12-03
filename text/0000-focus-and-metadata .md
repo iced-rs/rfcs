@@ -99,7 +99,6 @@ The `ElementMetadataState` is stored in a `RwLock`.  The struct will look someth
 ```rs
 pub struct ElementMetadataState {
     focused_id: Option<Id>,
-    // I am unsure at this time if we should use a vec or a hashmap. I am leaning towards a hashmap because it will be easier to find the metadata by id.
     metadata: HashMap<Id, ElementMetadata>,
 }
 
