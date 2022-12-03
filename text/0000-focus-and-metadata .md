@@ -128,7 +128,9 @@ lazy_static!(
 > Application Scope
 
 - The application should be responsible for managing the focus. 
-- The application should be responsible for setting the focus on the first element. - The application will also be responsible for setting the focus on the next element when the `Tab` key is pressed. The application will also be responsible for setting the focus on the previous element when the `Shift + Tab` key is pressed.
+- The application should be responsible for setting the focus on the first element. 
+- The application will also be responsible for setting the focus on the next element when the `Tab` key is pressed. 
+- The application will also be responsible for setting the focus on the previous element when the `Shift + Tab` key is pressed.
 
 > Query
 
