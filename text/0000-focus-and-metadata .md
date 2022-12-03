@@ -192,23 +192,23 @@ Browser focus management is a complex topic. I have found the following resource
 
 ## Unresolved questions
 
-- What parts of the design do you expect to resolve through the RFC process before this gets merged?
+> What parts of the design do you expect to resolve through the RFC process before this gets merged?
 
-Is the the direction we should be headed in? Is there a better solution? Is there a better way to implement this?
+- Is the the direction we should be headed in? Is there a better solution? Is there a better way to implement this?
 
-How do we rerender the widget when the metadata changes? 
+- How do we rerender the widget when the metadata changes? 
 
-- What parts of the design do you expect to resolve through the implementation of this feature before stabilization?
+> What parts of the design do you expect to resolve through the implementation of this feature before stabilization?
 
-Default styling for focus. We will need to set the default styling for focus if a focus style is not provided. This will allow us to provide a good experience out of the box.
+- Default styling for focus. We will need to set the default styling for focus if a focus style is not provided. This will allow us to provide a good experience out of the box.
 
-We may need to optimize the what the exact data structure will be for the shared state. And what strategies we will have the best characteristics for locking and caching the shared state.
+- We may need to optimize the what the exact data structure will be for the shared state. And what strategies we will have the best characteristics for locking and caching the shared state.
 
-- What related issues do you consider out of scope for this RFC that could be addressed in the future independently of the solution that comes out of this RFC?
+> What related issues do you consider out of scope for this RFC that could be addressed in the future independently of the solution that comes out of this RFC?
 
-We should consider how to handle parent child relationships. This may be a future feature. We may need to always create a metadata handle for all widgets in the future.
+- We should consider how to handle parent child relationships. This may be a future feature. We may need to always create a metadata handle for all widgets in the future.
 
-Hover state is also something that could be added to the metadata.
+- Hover state is also something that could be added to the metadata.
 
 ## [Optional] Future possibilities
 
