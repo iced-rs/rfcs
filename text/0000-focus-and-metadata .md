@@ -79,13 +79,21 @@ This is the technical portion of the RFC. Explain the design in sufficient detai
 
 <!-- Internally we will use a shared state to determine the the current focus,focus order, and what to focus on next. The element metadata is accessible by the `MetadataHandle`. This will allow us to access the metadata from any thread. The `MetadataHandle` will be created in the `Widget`. This will allow us to access the metadata for drawing and logic. -->
 
-When a `ElementMetadata` is created it will be added to a list of metadata handles. 
-The `ElementMetadata` will be created for every `Element` automatically.
-
-> I am unsure if this should be at the `Widget` or the `Element` or both.
+An `ElementMetadata` should be create with each widget. 
 
 ```rs
-// TBD
+    /// Creates a new [`Button`] with the given content.
+    pub fn new(content: impl Into<Element<'a, Message, Renderer>>) -> Self {        
+        Button {
+            metadata: ElementMetadata::new(),
+            content: content.into(),
+            on_press: None,
+            width: Length::Shrink,
+            height: Length::Shrink,
+            padding: Padding::new(5),
+            style: <Renderer::Theme as StyleSheet>::Style::default(),
+        }
+    }
 
 ```
 
