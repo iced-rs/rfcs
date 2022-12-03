@@ -79,25 +79,37 @@ This is the technical portion of the RFC. Explain the design in sufficient detai
 
 > Widget Scope
 
-Internally we will use a shared state to determine the the current focus,focus order, and what to focus on next. The element metadata is accessible by the `MetadataHandle`. This will allow us to access the metadata from any thread. The `MetadataHandle` will be created in the `Widget`. This will allow us to access the metadata for drawing and logic.
+<!-- Internally we will use a shared state to determine the the current focus,focus order, and what to focus on next. The element metadata is accessible by the `MetadataHandle`. This will allow us to access the metadata from any thread. The `MetadataHandle` will be created in the `Widget`. This will allow us to access the metadata for drawing and logic. -->
 
-When a `MetadataHandle` is created it will be added to a list of metadata handles. 
+When a `ElementMetadata` is created it will be added to a list of metadata handles. 
+The `ElementMetadata` will be created for every `Element` automatically.
+
+> I am unsure if this should be at the `Widget` level or the `Element` level at this time.
 
 ```rs
-    // When we create the metadata it is also added to the list of metadata handles internally.
-    let metadata = ElementMetadata::new()
-        .set_focusable(true)
-        .set_focus_order(0);
+pub struct Element<'a, Message, Renderer> {
+    metadata:ElementMetadata,
+    widget: Box<dyn Widget<Message, Renderer> + 'a>,
+}
+
 ```
 
-The `ElementMetadata` list and current Id will be stored in a `RwLock`.  The struct will look something like this. This metadata could expand in the future to support more accessibility features like ARIA. Or replace existing features like `hovered`.
+The `ElementMetadataState` stored in a `RwLock`.  The struct will look something like this. This metadata could expand in the future to support more accessibility features like ARIA. Or replace existing features like `hovered`.
 
 ```rs
-struct ElementMetadata {
-    id: Id,
-    focusable: bool,    
-    focus_order: i32,
+pub struct ElementMetadataState {
+    focused_id: Option<Id>,
+    metadata: HashMap<Id, ElementMetadata>,
 }
+
+lazy_static!(
+    pub static ref ELEMEENT_METADATA_STATE: ElementMetadataState = {
+        ElementMetadataState {
+            focused_id: None,
+            metadata: HashMap::new(),
+        }
+    };
+);
 ```
 
 The list can be sorted by the focus order to to determine the focus order. The first element in the list will be the first element to receive focus. The last element in the list will be the last element to receive focus.
