@@ -82,7 +82,7 @@ This is the technical portion of the RFC. Explain the design in sufficient detai
 When a `ElementMetadata` is created it will be added to a list of metadata handles. 
 The `ElementMetadata` will be created for every `Element` automatically.
 
-> I am unsure if this should be at the `Widget` level or the `Element` level at this time.
+> I am unsure if this should be at the `Widget` level or the `Element` level or both.
 
 ```rs
 // TBD
