@@ -113,7 +113,7 @@ The `ElementMetadata` list and current Id will be stored in a `RwLock`.  The str
 struct ElementMetadata {
     id: Id,
     focusable: bool,    
-    focus_order: u32,
+    focus_order: i32,
 }
 ```
 
