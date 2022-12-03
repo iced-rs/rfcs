@@ -194,11 +194,13 @@ Browser focus management is a complex topic. I have found the following resource
 
 - What parts of the design do you expect to resolve through the RFC process before this gets merged?
 
-Default styling for focus. We will need to set the default styling for focus if a focus style is not provided. This will allow us to provide a good experience out of the box.
+Is the the direction we should be headed in? Is there a better solution? Is there a better way to implement this?
 
-The API itself. We may need to add additional methods to the `MetadataHandle` to support more use cases. 
+How do we rerender the widget when the metadata changes? 
 
 - What parts of the design do you expect to resolve through the implementation of this feature before stabilization?
+
+Default styling for focus. We will need to set the default styling for focus if a focus style is not provided. This will allow us to provide a good experience out of the box.
 
 We may need to optimize the what the exact data structure will be for the shared state. And what strategies we will have the best characteristics for locking and caching the shared state.
 
