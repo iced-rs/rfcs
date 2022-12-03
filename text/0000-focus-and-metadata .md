@@ -85,10 +85,7 @@ The `ElementMetadata` will be created for every `Element` automatically.
 > I am unsure if this should be at the `Widget` level or the `Element` level at this time.
 
 ```rs
-pub struct Element<'a, Message, Renderer> {
-    metadata:ElementMetadata,
-    widget: Box<dyn Widget<Message, Renderer> + 'a>,
-}
+// TBD
 
 ```
 
@@ -102,7 +99,7 @@ pub struct ElementMetadataState {
 }
 
 lazy_static!(
-    pub static ref ELEMEENT_METADATA_STATE: ElementMetadataState = {
+    pub static ref ELEMENT_METADATA_STATE: ElementMetadataState = {
         ElementMetadataState {
             focused_id: None,
             metadata: HashMap::new(),
