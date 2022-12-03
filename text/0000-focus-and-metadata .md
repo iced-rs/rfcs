@@ -23,8 +23,6 @@ The goal here is to remove the need for the `focus` method and implementation de
 
 By doing so we are more likely to meet the expectations of the developer. The browser runtime is the most common runtime for web developers. The browser runtime has a very good focus management system and we should try to match it. This may help provided a familar path if trying to implement WCAG compliance for iced applications.
 
-To support this we need to be able to register element metadata. This metadata will be used to determine the focus order of the elements. This metadata will also be used to determine if an element is focusable or not.
-
 > Explaining the feature largely in terms of examples.
 
 The new API will be more similar to the browser runtime. This will allow developers to use the same patterns they are used to.
