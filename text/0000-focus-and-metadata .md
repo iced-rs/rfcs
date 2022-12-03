@@ -93,6 +93,7 @@ What believe so far is that we essentially want to place shared metadata behind 
 
 When the runtime is ready to render the widget it will be able to query the metadata to determine if the widget is focusable or not. If the widget is focusable the runtime will be able to determine the focus order of the widget. We should also compose a default focus style for the widget if one is not provided by the user.
 
+
 The `ElementMetadata` could look something like this.
 
 ```rs
