@@ -113,12 +113,6 @@ lazy_static!(
 ```
 
 
-We ca can be sorted by the focus order to to determine the focus order. The first element in the list will be the first element to receive focus. The last element in the list will be the last element to receive focus.
-
-When a `MetadataHandle` is dropped it will be removed from the list of metadata handles. This will allow us to remove elements from the focus order.
-
-The `MetadataHandle` methods will return cached values or utilize memoization. This will allow us to avoid locking for every access.
-
 > Application Scope
 
 - The application should be responsible for managing the focus. 
