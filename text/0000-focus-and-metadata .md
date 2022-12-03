@@ -85,9 +85,6 @@ pub fn draw(
 }
 ```
 
-
-
-
 > Explaining how iced programmers should *think* about the feature, and how it should impact the way they use iced. It should explain the impact as concretely as possible.
 
 We don't want to think about focus management. We want to be able to use the same patterns we are used to. This will allow us to focus on the application logic and not the focus management. Focus would be a first class citizen in iced.
@@ -205,6 +202,8 @@ Please also take into consideration that iced sometimes intentionally diverges f
 ## Unresolved questions
 
 - What parts of the design do you expect to resolve through the RFC process before this gets merged?
+
+Default styling for focus. We will need to set the default styling for focus if a focus style is not provided. This will allow us to provide a good experience out of the box.
 
 The API itself. We may need to add additional methods to the `MetadataHandle` to support more use cases. 
 
