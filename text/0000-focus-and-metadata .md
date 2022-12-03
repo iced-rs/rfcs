@@ -91,6 +91,8 @@ There are a few technical details I am still discovering. I will update this sec
 
 What believe so far is that we essentially want to place shared metadata behind an effiecent datastructure behind some sort of Mutex, or RwLock. This will allow us to share the metadata between the runtime and the widget. The runtime will be able to update the metadata and the widget will be able to read the metadata. Widgets or the Application should be able to query or update the metadata.
 
+A cache should be implemented to to reduce locking and improve performance. The cache should be invalidated when the metadata is updated.
+
 When the runtime is ready to render the widget it will be able to query the metadata to determine if the widget is focusable or not. If the widget is focusable the runtime will be able to determine the focus order of the widget. We should also compose a default focus style for the widget if one is not provided by the user.
 
 
