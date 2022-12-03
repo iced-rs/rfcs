@@ -114,9 +114,6 @@ struct ElementMetadata {
     id: Id,
     focusable: bool,    
     focus_order: u32,
-    focus_next: Option<MetadataHandle>,
-    focus_previous: Option<MetadataHandle>,
-    focus: bool,
 }
 ```
 
