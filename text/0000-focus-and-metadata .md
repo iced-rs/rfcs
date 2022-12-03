@@ -52,7 +52,7 @@ Could this be done automatically? Can we get a handle to the metadata from the w
 
 A default focus style would be applied to all focusable widgets. It can be overridden by the user if they want to by defining a custom style for the focused state.
 
-To override the default styling we can use the `MetadataHandle` to access the metadata.
+To override the default styling we can use the `ElementMetadata` to access the metadata.
 
 ```rs
 pub fn draw(
@@ -120,7 +120,7 @@ lazy_static!(
 
 > Query
 
-The `MetadataHandle` will provide a other global methods that will allow us to close the gap between the browser runtime and iced. We should be able to query the metadata in the application or the widget. 
+The `ElementMetadata` will provide a other global methods that will allow us to close the gap between the browser runtime and iced. We should be able to query the metadata in the application or the widget. 
 
 ## Drawbacks
 
