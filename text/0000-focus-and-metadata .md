@@ -5,6 +5,8 @@
 
 Focus management is a complex topic and there are many different ways to handle it. This proposal is a possible solution that has closer parity with the browser runtime.
 
+The shared metadata API is mostley private and not a way for users solve their state management problems. It is a way for the Iced to provide a familiar API for the user while solving accessibility and focus management problems.
+
 ## Motivation
 
 Why are we doing this? 
