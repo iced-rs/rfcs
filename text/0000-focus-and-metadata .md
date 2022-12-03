@@ -91,8 +91,6 @@ This is the technical portion of the RFC. Explain the design in sufficient detai
 - It is reasonably clear how the feature would be implemented.
 - Corner cases are dissected by example.
 
-<!-- Internally we will use a shared state to determine the the current focus,focus order, and what to focus on next. The element metadata is accessible by the `MetadataHandle`. This will allow us to access the metadata from any thread. The `MetadataHandle` will be created in the `Widget`. This will allow us to access the metadata for drawing and logic. -->
-
 The `ElementMetadata` could look something like this.
 
 ```rs
