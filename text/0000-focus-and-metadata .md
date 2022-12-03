@@ -19,7 +19,7 @@ As a developer I should have a simular experience to the browser runtime when it
 
 ## Guide-level explanation
 
-The goal here is to remove the need for the `focus` method on the `Element` trait. This method is used to set the focus on a specific element. This is a very low level API and it is not very ergonomic. The new API will be more similar to the browser runtime.
+The goal here is to remove the need for the `focus` method and implementation details from the widget. The new API will be more similar to the browser runtime.
 
 By doing so we are more likely to meet the expectations of the developer. The browser runtime is the most common runtime for web developers. The browser runtime has a very good focus management system and we should try to match it. This may help provided a familar path if trying to implement WCAG compliance for iced applications.
 
