@@ -32,8 +32,23 @@ The new API will be more similar to the browser runtime. This will allow develop
 
 ### Example
 
+The `ElementMetadata` holds a presribed set of properties that can be used to determine the focus order of the element. The `ElementMetadata` also holds a `focusable` property that can be used to determine if the element is focusable or not.
+
+We should make the implementation of the `ElementMetadata` as simple as possible. 
+Could this be done automatically? Can we get a handle to the metadata from the widget if we did so?
+
 ```rs
-// TBD
+    pub fn new(content: impl Into<Element<'a, Message, Renderer>>) -> Self {        
+        Button {
+            metadata: ElementMetadata::new(),
+            content: content.into(),
+            on_press: None,
+            width: Length::Shrink,
+            height: Length::Shrink,
+            padding: Padding::new(5),
+            style: <Renderer::Theme as StyleSheet>::Style::default(),
+        }
+    }
 ```
 ### Styling 
 
@@ -79,25 +94,8 @@ This is the technical portion of the RFC. Explain the design in sufficient detai
 
 <!-- Internally we will use a shared state to determine the the current focus,focus order, and what to focus on next. The element metadata is accessible by the `MetadataHandle`. This will allow us to access the metadata from any thread. The `MetadataHandle` will be created in the `Widget`. This will allow us to access the metadata for drawing and logic. -->
 
-An `ElementMetadata` should be create with each widget. 
 
-```rs
-    /// Creates a new [`Button`] with the given content.
-    pub fn new(content: impl Into<Element<'a, Message, Renderer>>) -> Self {        
-        Button {
-            metadata: ElementMetadata::new(),
-            content: content.into(),
-            on_press: None,
-            width: Length::Shrink,
-            height: Length::Shrink,
-            padding: Padding::new(5),
-            style: <Renderer::Theme as StyleSheet>::Style::default(),
-        }
-    }
-
-```
-
-The `ElementMetadataState` stored in a `RwLock`.  The struct will look something like this. This metadata could expand in the future to support more accessibility features like ARIA. Or replace existing features like `hovered`.
+The `ElementMetadataState` is stored in a `RwLock`.  The struct will look something like this. This metadata could expand in the future to support more accessibility features like ARIA. Or replace existing features like `hovered`.
 
 ```rs
 pub struct ElementMetadataState {
