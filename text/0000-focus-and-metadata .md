@@ -1,4 +1,4 @@
-# First Class Focus & Metadata
+# Focus & Metadata
 >>> ## Status: Discovery
 
 ## Summary
