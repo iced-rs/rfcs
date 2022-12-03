@@ -186,12 +186,6 @@ Browser focus management is a complex topic. I have found the following resource
 - [W3C Focus Order:](https://www.w3.org/TR/UNDERSTANDING-WCAG20/navigation-mechanisms-focus-order.html)
 - [ARIA Developing a Keyboard Interface](https://www.w3.org/WAI/ARIA/apg/practices/keyboard-interface)
 
-This section is intended to encourage you as an author to think about the lessons from other toolkits, provide readers of your RFC with a fuller picture.
-If there is no prior art, that is fine - your ideas are interesting to us whether they are brand new or if it is an adaptation from other languages.
-
-Note that while precedent set by other languages is some motivation, it does not on its own motivate an RFC.
-Please also take into consideration that iced sometimes intentionally diverges from common toolkit features.
-
 
 ## Unresolved questions
 
