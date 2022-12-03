@@ -56,8 +56,11 @@ pub fn new(content: impl Into<Element<'a, Message, Renderer>>) -> Self {
     }
 }
 ```
+### Styling 
 
-When its time to draw the button we can use the `MetadataHandle` to access the metadata. This will allow us to determine if the button is focusable and what the focus order is.
+A default focus style would be applied to all focusable widgets. It can be overridden by the user if they want to by defining a custom style for the focused state.
+
+To override the default styling we can use the `MetadataHandle` to access the metadata.
 
 ```rs
 pub fn draw(
@@ -81,6 +84,9 @@ pub fn draw(
     };
 }
 ```
+
+
+
 
 > Explaining how iced programmers should *think* about the feature, and how it should impact the way they use iced. It should explain the impact as concretely as possible.
 
