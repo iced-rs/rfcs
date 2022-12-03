@@ -77,8 +77,6 @@ This is the technical portion of the RFC. Explain the design in sufficient detai
 - It is reasonably clear how the feature would be implemented.
 - Corner cases are dissected by example.
 
-> Widget Scope
-
 <!-- Internally we will use a shared state to determine the the current focus,focus order, and what to focus on next. The element metadata is accessible by the `MetadataHandle`. This will allow us to access the metadata from any thread. The `MetadataHandle` will be created in the `Widget`. This will allow us to access the metadata for drawing and logic. -->
 
 When a `ElementMetadata` is created it will be added to a list of metadata handles. 
@@ -99,6 +97,7 @@ The `ElementMetadataState` stored in a `RwLock`.  The struct will look something
 ```rs
 pub struct ElementMetadataState {
     focused_id: Option<Id>,
+    // I am unsure at this time if we should use a vec or a hashmap. I am leaning towards a hashmap because it will be easier to find the metadata by id.
     metadata: HashMap<Id, ElementMetadata>,
 }
 
@@ -112,7 +111,9 @@ lazy_static!(
 );
 ```
 
-The list can be sorted by the focus order to to determine the focus order. The first element in the list will be the first element to receive focus. The last element in the list will be the last element to receive focus.
+
+```rs
+We ca can be sorted by the focus order to to determine the focus order. The first element in the list will be the first element to receive focus. The last element in the list will be the last element to receive focus.
 
 When a `MetadataHandle` is dropped it will be removed from the list of metadata handles. This will allow us to remove elements from the focus order.
 
