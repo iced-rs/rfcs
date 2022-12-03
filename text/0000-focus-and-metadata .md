@@ -1,4 +1,4 @@
-# First Class Focus
+# First Class Focus & Metadata
 
 ## Summary
 
