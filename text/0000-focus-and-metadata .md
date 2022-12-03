@@ -33,24 +33,7 @@ The new API will be more similar to the browser runtime. This will allow develop
 ### Example
 
 ```rs
-pub fn new(content: impl Into<Element<'a, Message, Renderer>>) -> Self {
-
-    // Create a new metadata object. This will be used to determine the focus order internally a `MetadataHandle` is returned that can be used to access the metadata later.
-
-    let metadata = ElementMetadata::new()
-        .set_focusable(true)
-        .set_focus_order(0);
-
-    Button {
-        metadata,
-        content: content.into(),
-        on_press: None,
-        width: Length::Shrink,
-        height: Length::Shrink,
-        padding: Padding::new(5),
-        style: <Renderer::Theme as StyleSheet>::Style::default(),
-    }
-}
+// TBD
 ```
 ### Styling 
 
