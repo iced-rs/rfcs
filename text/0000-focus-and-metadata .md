@@ -175,14 +175,13 @@ The impact of not doing this is that we will not be able to provide a good exper
 
 ## [Optional] Prior art
 
-Discuss prior art, both the good and the bad, in relation to this proposal.
+>Discuss prior art, both the good and the bad, in relation to this proposal.
 A few examples of what this can include are:
-
 > Does this feature exist in other GUI toolkits and what experience have their community had?
 
 This feature exists in the browser runtime. This is the most familiar experience for developers.
 
-- Are there any published papers or great posts that discuss this? If you have some relevant papers to refer to, this can serve as a more detailed theoretical background.
+> Are there any published papers or great posts that discuss this? If you have some relevant papers to refer to, this can serve as a more detailed theoretical background.
 
 Browser focus management is a complex topic. I have found the following resources to be helpful.
 
