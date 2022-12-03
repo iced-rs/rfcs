@@ -93,6 +93,17 @@ This is the technical portion of the RFC. Explain the design in sufficient detai
 
 <!-- Internally we will use a shared state to determine the the current focus,focus order, and what to focus on next. The element metadata is accessible by the `MetadataHandle`. This will allow us to access the metadata from any thread. The `MetadataHandle` will be created in the `Widget`. This will allow us to access the metadata for drawing and logic. -->
 
+The `ElementMetadata` could look something like this.
+
+```rs
+#[derive(Debug, Clone)]
+pub struct ElementMetadata {
+    id: Id,
+    focusable: bool,
+    focus_order: i32
+}
+```
+
 
 The `ElementMetadataState` is stored in a `RwLock`.  The struct will look something like this. This metadata could expand in the future to support more accessibility features like ARIA. Or replace existing features like `hovered`.
 
