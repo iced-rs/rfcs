@@ -8,7 +8,7 @@ This proposal is for a shared attributes API. It is intended to be used by the f
 ## Motivation
 
 Why are we doing this? 
-To support keyboard navigation and focus management in the runtime.
+To support keyboard navigation and focus management in the runtime in a way that is consistent with the web platform.
 
 What use cases does it support? 
 - Accessibility and keyboard navigation.
