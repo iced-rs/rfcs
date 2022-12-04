@@ -119,7 +119,7 @@ pub struct ElementAttributesState {
 }
 
 lazy_static!(
-    pub static ref ELEMENT_METADATA_STATE: ElementAttributesState = {
+    pub static ref ELEMENT_ATTRIBUTES_STATE: ElementAttributesState = {
         ElementAttributesState {
             focused_id: None,
             attributes: HashMap::new(),
