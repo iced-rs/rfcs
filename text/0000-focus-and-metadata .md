@@ -107,6 +107,7 @@ The basic idea is to place shared attributes in some sort of Mutex, or RwLock. T
 
 A cache should be implemented to to reduce locking and improve performance. The cache should be invalidated when the attributes is updated.
 
+I am unsure we need to support a bag of attributes. I think we can get away with a set of attributes that are defined in the `ElementAttributes` struct. Data attributes can be added later if needed if we need to support sharing data between widgets.
 
 The `ElementAttributes` could look something like this.
 
