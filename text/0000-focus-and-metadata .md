@@ -1,13 +1,13 @@
-# Focus & Metadata
+# Focus & Attributes
 >>> ## Status: Discovery
 
 ## Summary
 
-This proposal is for a shared attribute metadata API. It is intended to be used by the focus system, but is not limited to that use case.
+This proposal is for a shared attributes API. It is intended to be used by the focus system, but is not limited to that use case. It is intended to be used by any system that needs to store or retrieve attributes on a component.
 
 Focus management is a complex topic and there are many different ways to handle it. This proposal is a possible solution that has closer parity with the browser runtime.
 
-The shared metadata API is not a way for users solve their state management problems. It is a way for the Iced to provide a familiar API for the user while solving accessibility and focus management problems.
+The shared attributes API is not a way for users solve their state management problems. It is a way for the Iced to provide a familiar API for the user while solving accessibility and focus management problems.
 
 ## Motivation
 
@@ -17,10 +17,10 @@ To support keyboard navigation and focus management in the runtime.
 What use cases does it support? 
 - Accessibility and keyboard navigation.
 - Gamepad navigation.
-- Element Metadata
+- Element Attributes
 
 What is the expected outcome?
-As a developer I should have a simular experience to the browser runtime when it comes to focus management.
+As a developer I should have a similar experience to the browser runtime when it comes to focus management.
 
 ## Guide-level explanation
 
@@ -35,15 +35,15 @@ The new API will be more similar to the browser runtime. This will allow develop
 
 ### Example
 
-The `ElementMetadata` holds a presribed set of properties that can be used to determine the focus order of the element. The `ElementMetadata` also holds a `focusable` property that can be used to determine if the element is focusable or not.
+The `ElementAttributes` holds a prescribed set of properties that can be used to determine the focus order of the element. The `ElementAttributes` also holds a `focusable` property that can be used to determine if the element is focusable or not.
 
-We should make the implementation of the `ElementMetadata` as simple as possible. 
-Could this be done automatically? Can we get a handle to the metadata from the widget if we did so?
+We should make the implementation of the `ElementAttributes` as simple as possible. 
+Could this be done automatically? Can we get a handle to the attributes from the widget if we did so?
 
 ```rs
     pub fn new(content: impl Into<Element<'a, Message, Renderer>>) -> Self {        
         Button {
-            metadata: ElementMetadata::new(),
+            attributes: ElementAttributes::new(),
             content: content.into(),
             on_press: None,
             width: Length::Shrink,
@@ -57,7 +57,7 @@ Could this be done automatically? Can we get a handle to the metadata from the w
 
 A default focus style would be applied to all focusable widgets. It can be overridden by the user if they want to by defining a custom style for the focused state.
 
-To override the default styling we can use the `ElementMetadata` to access the metadata.
+To override the default styling we can use the `ElementAttributes` to access the attributes.
 
 ```rs
 pub fn draw(
@@ -68,7 +68,7 @@ pub fn draw(
     viewport: &Rectangle,
 ) -> Renderer::Output {
     let is_mouse_over = bounds.contains(cursor_position);
-    let is_focused = self.metadata.is_focused();
+    let is_focused = self.attributes.is_focused();
 
     let mut styling = if !is_enabled {
         style_sheet.disabled(style)
@@ -91,18 +91,18 @@ We don't want to think about focus management. We want to be able to use the sam
 
 There are a few technical details I am still discovering. I will update this section as I learn more.
 
-What believe so far is that we essentially want to place shared metadata behind an effiecent datastructure behind some sort of Mutex, or RwLock. This will allow us to share the metadata between the runtime and the widget. The runtime will be able to update the metadata and the widget will be able to read the metadata. Widgets or the Application should be able to query or update the metadata.
+What believe so far is that we essentially want to place shared attributes behind an efficient data structure behind some sort of Mutex, or RwLock. This will allow us to share the attributes between the runtime and the widget. The runtime will be able to update the attributes and the widget will be able to read the attributes. Widgets or the Application should be able to query or update the attributes.
 
-A cache should be implemented to to reduce locking and improve performance. The cache should be invalidated when the metadata is updated.
+A cache should be implemented to to reduce locking and improve performance. The cache should be invalidated when the attributes is updated.
 
-When the runtime is ready to render the widget it will be able to query the metadata to determine if the widget is focusable or not. If the widget is focusable the runtime will be able to determine the focus order of the widget. We should also compose a default focus style for the widget if one is not provided by the user.
+When the runtime is ready to render the widget it will be able to query the attributes to determine if the widget is focusable or not. If the widget is focusable the runtime will be able to determine the focus order of the widget. We should also compose a default focus style for the widget if one is not provided by the user.
 
 
-The `ElementMetadata` could look something like this.
+The `ElementAttributes` could look something like this.
 
 ```rs
 #[derive(Debug, Clone)]
-pub struct ElementMetadata {
+pub struct ElementAttributes {
     id: Id,
     focusable: bool,
     focus_order: i32
@@ -110,19 +110,19 @@ pub struct ElementMetadata {
 ```
 
 
-The `ElementMetadataState` is stored in a `RwLock`.  The struct will look something like this. This metadata could expand in the future to support more accessibility features like ARIA. Or replace existing features like `hovered`.
+The `ElementAttributesState` is stored in a `RwLock`.  The struct will look something like this. This attributes could expand in the future to support more accessibility features like ARIA. Or replace existing features like `hovered`.
 
 ```rs
-pub struct ElementMetadataState {
+pub struct ElementAttributesState {
     focused_id: Option<Id>,
-    metadata: HashMap<Id, ElementMetadata>,
+    attributes: HashMap<Id, ElementAttributes>,
 }
 
 lazy_static!(
-    pub static ref ELEMENT_METADATA_STATE: ElementMetadataState = {
-        ElementMetadataState {
+    pub static ref ELEMENT_METADATA_STATE: ElementAttributesState = {
+        ElementAttributesState {
             focused_id: None,
-            metadata: HashMap::new(),
+            attributes: HashMap::new(),
         }
     };
 );
@@ -138,7 +138,7 @@ lazy_static!(
 
 > Query
 
-The `ElementMetadata` will provide a other global methods that will allow us to close the gap between the browser runtime and iced. We should be able to query the metadata in the application or the widget. 
+The `ElementAttributes` will provide a other global methods that will allow us to close the gap between the browser runtime and iced. We should be able to query the attributes in the application or the widget. 
 
 ## Drawbacks
 
@@ -199,7 +199,7 @@ Browser focus management is a complex topic. I have found the following resource
 
 - Is the the direction we should be headed in? Is there a better solution? Is there a better way to implement this?
 
-- How do we rerender the widget when the metadata changes? 
+- How do we rerender the widget when the attributes changes? 
 
 > What parts of the design do you expect to resolve through the implementation of this feature before stabilization?
 
@@ -209,9 +209,9 @@ Browser focus management is a complex topic. I have found the following resource
 
 > What related issues do you consider out of scope for this RFC that could be addressed in the future independently of the solution that comes out of this RFC?
 
-- We should consider how to handle parent child relationships. This may be a future feature. We may need to always create a metadata handle for all widgets in the future.
+- We should consider how to handle parent child relationships. This may be a future feature. We may need to always create a attributes handle for all widgets in the future.
 
-- Hover state is also something that could be added to the metadata.
+- Hover state is also something that could be added to the attributes.
 
 ## [Optional] Future possibilities
 
