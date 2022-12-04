@@ -96,17 +96,13 @@ pub fn draw(
 
 > Explaining how iced programmers should *think* about the feature, and how it should impact the way they use iced. It should explain the impact as concretely as possible.
 
-We don't want to think about focus management. We want to be able to use the same patterns we are used to. This will allow us to focus on the application logic and not the focus management. Focus would be a first class citizen in iced.
-
+Developers don't want to think about focus management by default. We should enable them to focus on the application logic as much as possible. Element attributes could be a first class citizen in iced. Letting the runtime worry about the focus management by requiring the widget to implement `ElementAttributes`.
 
 ## Implementation strategy
 
 The basic idea is to place shared attributes in some sort of Mutex, or RwLock. This will allow us to share the attributes between the runtime and the widget. The runtime will be able to update the attributes and the widget will be able to read the attributes. Widgets or the Application should be able to query or update the attributes.
 
 A cache should be implemented to to reduce locking and improve performance. The cache should be invalidated when the attributes is updated.
-
-
-<!-- When the runtime is ready to render the widget it will be able to read the attributes to determine if the widget is focusable or not. If the widget is focusable the runtime will be able to determine the focus order of the widget. We should also compose a default focus style for the widget if one is not provided by the user. -->
 
 
 The `ElementAttributes` could look something like this.
