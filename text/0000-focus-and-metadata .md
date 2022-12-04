@@ -3,7 +3,12 @@
 
 ## Summary
 
-This proposal is for a shared attributes API. It is intended to be used by the focus system, but is not limited to that use case. It is intended to be used by any system that needs to store or retrieve attributes on a component.
+This proposal is for a shared attributes API. It is intended to be used by the focus system, but is not limited to that use case. It is intended to be used by any system that needs to store or retrieve attributes on a component. For example:
+- Focus / Tabbing order
+- Accessibility
+- Z-Index
+- Visibility
+- Bounds
 
 Focus management is a complex topic and there are many different ways to handle it. This proposal is a possible solution that has closer parity with the browser runtime.
 
@@ -216,6 +221,8 @@ Browser focus management is a complex topic. I have found the following resource
 
 Expanding on this concept to support more accesibility features like ARIA. 
 Other widget attributes that could be handled by the runtime.
+
+- Z-Index: The renderer could use this to determine the order of the widgets. This could be used to implement a stacking context.
 
 - Visibility: This would also allow us to skip rendering and state updates if the widget is not visible. This would be a great performance improvement. Especially for large applications or infinite scroll applications. 
 
