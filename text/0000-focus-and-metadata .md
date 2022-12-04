@@ -96,7 +96,10 @@ pub fn draw(
 
 > Explaining how iced programmers should *think* about the feature, and how it should impact the way they use iced. It should explain the impact as concretely as possible.
 
-Developers don't want to think about focus management by default. We should enable them to focus on the application logic as much as possible. Element attributes could be a first class citizen in iced. Letting the runtime worry about the focus management by requiring the widget to implement `ElementAttributes`.
+`ElementAttributes` is where you can inform the runtime how to handle your widget.
+Setting attributes like `focusable`, `focus_order`, or `autofocus` will allow the runtime to handle keyboard navigation and focus management in a way that is consistent with the browser runtime.
+
+This gives everyone a specification to work from. It also gives us a way to build a consistent experience.
 
 ## Implementation strategy
 
