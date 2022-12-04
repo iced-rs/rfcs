@@ -29,6 +29,8 @@ By doing so we are more likely to meet the expectations of the developer. The br
 
 > Explaining the feature largely in terms of examples.
 
+The `ElementAttributes` API will an agreed structure that internal systems and other widgets can interface with. At this time I am not considering custom, or data-* attributes.
+
 ### Example
 
 The `ElementAttributes` holds a prescribed set of properties that can be used to determine the focus order of the element. The `ElementAttributes` also holds a `focusable` property that can be used to determine if the element is focusable or not.
