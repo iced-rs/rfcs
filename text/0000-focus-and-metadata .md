@@ -3,7 +3,7 @@
 
 ## Summary
 
-This proposal is for a shared attributes API. It is intended to be used by the focus system, but is not limited to that use case. It is intended to be used by any system that needs to store or retrieve attributes on a component. For example:
+This proposal is for a shared attributes API. It is intended to be used by the focus system, but is not limited to that use case. It is intended to be used by any system that needs to store or retrieve attributes on an element. For example:
 - Focus / Tabbing order
 - Accessibility
 - Z-Index
