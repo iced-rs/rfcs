@@ -89,7 +89,7 @@ We don't want to think about focus management. We want to be able to use the sam
 
 ## Implementation strategy
 
-The basic idea is to place shared attributes behind an efficient data structure behind some sort of Mutex, or RwLock. This will allow us to share the attributes between the runtime and the widget. The runtime will be able to update the attributes and the widget will be able to read the attributes. Widgets or the Application should be able to query or update the attributes.
+The basic idea is to place shared attributes in some sort of Mutex, or RwLock. This will allow us to share the attributes between the runtime and the widget. The runtime will be able to update the attributes and the widget will be able to read the attributes. Widgets or the Application should be able to query or update the attributes.
 
 A cache should be implemented to to reduce locking and improve performance. The cache should be invalidated when the attributes is updated.
 
