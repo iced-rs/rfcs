@@ -3,6 +3,8 @@
 
 ## Summary
 
+This proposal is for a shared attribute metadata API. It is intended to be used by the focus system, but is not limited to that use case.
+
 Focus management is a complex topic and there are many different ways to handle it. This proposal is a possible solution that has closer parity with the browser runtime.
 
 The shared metadata API is not a way for users solve their state management problems. It is a way for the Iced to provide a familiar API for the user while solving accessibility and focus management problems.
