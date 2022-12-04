@@ -234,3 +234,5 @@ Other widget attributes that could be handled by the runtime.
 - Visibility: This would also allow us to skip rendering and state updates if the widget is not visible. This would be a great performance improvement. Especially for large applications or infinite scroll applications. 
 
 - Cached Bounds: This would allow us to cache the bounds of the widget. This would allow us to skip the layout pass if the widget is not visible. This would be a great performance improvement. Especially for large applications or infinite scroll applications.
+
+- Data Bags: This would allow us to share data between widgets. 
