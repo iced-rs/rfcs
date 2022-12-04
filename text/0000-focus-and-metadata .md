@@ -29,7 +29,7 @@ By doing so we are more likely to meet the expectations of the developer. The br
 
 > Explaining the feature largely in terms of examples.
 
-The `ElementAttributes` API will an agreed structure that internal systems and other widgets can interface with. At this time I am not considering custom, or data-* attributes.
+The `ElementAttributes` API is an agreed contract that internal systems and other widgets can interface with. At this time I am not considering custom, or data-* attributes.
 
 ### Example
 
