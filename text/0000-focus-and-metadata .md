@@ -215,3 +215,5 @@ Browser focus management is a complex topic. I have found the following resource
 
 Expanding on this concept to support more accesibility features like ARIA. 
 Other widget attributes that could be handled by the runtime.
+
+This would also allow us to skip rendering and state updates if the widget is not visible. This would be a great performance improvement. Especially for large applications or infinite scroll applications. 
