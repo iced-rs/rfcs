@@ -16,7 +16,8 @@ What use cases does it support?
 - Element Attributes
 
 What is the expected outcome?
-As a developer I should have a similar experience to the browser runtime when it comes to focus management.
+A consistent API for storing and retrieving attributes on elements.
+Keyboard navigation and focus management that is consistent with the browser runtime.
 
 ## Guide-level explanation
 
