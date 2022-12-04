@@ -62,7 +62,7 @@ pub fn focus_order(&mut self, focus_order: u32) -> &mut Self {
 }
 
 pub fn is_focused(&self) -> bool {
-    ElementAttributes::is_focused(&self.attributes)
+    Element::is_focused(&self.attributes)
 }
 ```
 ### Styling 
@@ -129,7 +129,7 @@ pub struct InternalElementState {
 }
 
 lazy_static!(
-    pub static ref ELEMENT_STATE: InternalElementState = {
+    pub static ref INTERNAL_ELEMENT_STATE: InternalElementState = {
         InternalElementState {
             focused_id: None,
             attributes: HashMap::new(),
