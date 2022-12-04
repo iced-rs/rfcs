@@ -39,17 +39,31 @@ We should make the implementation of the `ElementAttributes` as simple as possib
 Could this be done automatically? Can we get a handle to the attributes from the widget if we did so?
 
 ```rs
-    pub fn new(content: impl Into<Element<'a, Message, Renderer>>) -> Self {        
-        Button {
-            attributes: ElementAttributes::new(),
-            content: content.into(),
-            on_press: None,
-            width: Length::Shrink,
-            height: Length::Shrink,
-            padding: Padding::new(5),
-            style: <Renderer::Theme as StyleSheet>::Style::default(),
-        }
+pub fn new(content: impl Into<Element<'a, Message, Renderer>>) -> Self {        
+    Button {
+        attributes: ElementAttributes::new(),
+        content: content.into(),
+        on_press: None,
+        width: Length::Shrink,
+        height: Length::Shrink,
+        padding: Padding::new(5),
+        style: <Renderer::Theme as StyleSheet>::Style::default(),
     }
+}
+
+pub fn focusable(&mut self, focusable: bool) -> &mut Self {
+    self.attributes.focusable = focusable;
+    self
+}
+
+pub fn focus_order(&mut self, focus_order: u32) -> &mut Self {
+    self.attributes.focus_order = focus_order;
+    self
+}
+
+pub fn is_focused(&self) -> bool {
+    ElementAttributes::is_focused(&self.attributes)
+}
 ```
 ### Styling 
 
@@ -107,17 +121,17 @@ pub struct ElementAttributes {
 ```
 
 
-The `ElementAttributesState` is stored in a `RwLock`.  The struct will look something like this. This attributes could expand in the future to support more accessibility features like ARIA. Or replace existing features like `hovered`.
+The `InternalElementState` is stored in a `RwLock`.  The struct will look something like this. This attributes could expand in the future to support more accessibility features like ARIA. Or replace existing features like `hovered`.
 
 ```rs
-pub struct ElementAttributesState {
+pub struct InternalElementState {
     focused_id: Option<Id>,
     attributes: HashMap<Id, ElementAttributes>,
 }
 
 lazy_static!(
-    pub static ref ELEMENT_ATTRIBUTES_STATE: ElementAttributesState = {
-        ElementAttributesState {
+    pub static ref ELEMENT_STATE: InternalElementState = {
+        InternalElementState {
             focused_id: None,
             attributes: HashMap::new(),
         }
