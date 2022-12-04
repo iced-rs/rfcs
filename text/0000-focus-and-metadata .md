@@ -121,7 +121,7 @@ pub struct ElementAttributes {
 ```
 
 
-The `InternalElementState` is stored in a `RwLock`.  The struct will look something like this. This attributes could expand in the future to support more accessibility features like ARIA. Or replace existing features like `hovered`.
+The `InternalElementState` is stored in a `RwLock`.  The struct will look something like this. This attributes could expand in the future to support more accessibility features like ARIA.
 
 ```rs
 pub struct InternalElementState {
