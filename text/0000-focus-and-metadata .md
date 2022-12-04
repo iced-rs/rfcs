@@ -19,6 +19,8 @@ What is the expected outcome?
 A consistent API for storing and retrieving attributes on elements.
 Keyboard navigation and focus management that is consistent with the browser runtime.
 
+It isn't intended to be a 1 to 1 parity. It is intended to be a consistent API that can be used to build a consistent experience.
+
 ## Guide-level explanation
 
 The goal is to design an API will be familiar to the developer and an a default experience that is an analogous the browser runtime.
