@@ -93,7 +93,8 @@ The basic idea is to place shared attributes in some sort of Mutex, or RwLock. T
 
 A cache should be implemented to to reduce locking and improve performance. The cache should be invalidated when the attributes is updated.
 
-When the runtime is ready to render the widget it will be able to query the attributes to determine if the widget is focusable or not. If the widget is focusable the runtime will be able to determine the focus order of the widget. We should also compose a default focus style for the widget if one is not provided by the user.
+
+<!-- When the runtime is ready to render the widget it will be able to read the attributes to determine if the widget is focusable or not. If the widget is focusable the runtime will be able to determine the focus order of the widget. We should also compose a default focus style for the widget if one is not provided by the user. -->
 
 
 The `ElementAttributes` could look something like this.
