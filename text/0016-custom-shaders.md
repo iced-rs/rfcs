@@ -3,12 +3,12 @@
 ## Summary
 
 Add custom shader support to Iced under the `wgpu` feature.
-
+<br/><br/> 
 
 ## Motivation
 
 Iced currently supports custom render pipelines, which allow users to define their own vertex and fragment shaders, but require much boilerplate code to do so. This RFC proposes a simpler API to define custom shaders for the specific case of rendering on a quad. The goal is to make it easier to render unique-looking widgets and decorations.
-
+<br/><br/> 
 
 ## Guide-level explanation
 
@@ -106,7 +106,7 @@ struct VertexInput {
 }
 ```
 
-The mouse clicks are encoded using a two-dimensional vector: the first component corresponds to a left mouse button press, and the second component to a right mouse button press. In this particular example, their values are zero at rest and one when pressed. In the shader code, the color of the shapes react to a right mouse button press:
+The mouse clicks are encoded using a two-dimensional vector: the first component corresponds to a left mouse button press, and the second component to a right mouse button press. In this particular example, their values are zero at rest and one when pressed. In the shader code (see `custom_shader.wgsl` in the example), the color of the shapes react to a right mouse button press:
     
 ```rs
     // upon left mouse button press, change border color
@@ -117,18 +117,12 @@ The mouse clicks are encoded using a two-dimensional vector: the first component
 ```
 
 
-
+<br/><br/> 
 ## Implementation strategy
 
+See the actual implementation in my fork of Iced: https://github.com/eliotbo/iced.
+
 The implementation of custom shader quads should follow that of custom quads as closely as possible. In summary, we modify the following modules: `graphics::renderer`, `wgpu::backend`, `graphics::primitive`, `graphics::layer` and `native::renderer`. And we add two new modules: `graphics::layer::custom_shader_quad` and `wgpu::custom_shader_quad`.
-
-<!-- we add a new `Primitive` called `CustomShaderQuad` to the `graphics` module. 
-
-We also add new `CustomShaderQuad` structs in  the `graphics::layer` module and in the `native::renderer` module. We add a new method called `make_custom_shader_quad(..)` inside the `Renderer` struct for instanciating the custom shader quad, and add a new struct to the `renderer` module. 
-
-We add a new files to the the `graphics::layer` directory and the `wgpu` directory, both of which are named `custom_shader_quad.rs`. The new `graphics::layer` file contains the two structs `CustomShaderQuadWithCode` and `CustomShaderQuad`, the second of which can be directly converted to bytes. -->
-
-
 
 We add a new  `graphics::Primitive`:
 ```rs
@@ -241,7 +235,7 @@ The `flush(..)` method in `wgpu::backend` needs to be modified to handle the `Cu
         }
 ```
 
-In `graphics::renderer`, we add a new method for the `Renderer` struct:
+In `graphics::renderer`, we add a new method to the `Renderer` struct:
 ```rs
     fn make_custom_shader_quad(
         &mut self,
@@ -265,8 +259,10 @@ In `graphics::renderer`, we add a new method for the `Renderer` struct:
 
 This `make_custom_shader_quad(..)` method must be called by the end user to instanciate a custom shader quad. It is also present inside the `draw(..)` method in the example above. In the case where the `mouse_position`, `mouse_click`, `time` and `frame` fields are not needed, the user must give dummy values to these fields anyway.
 
-For all widgets that implement the `Overlay` trait, one could use a custom shader by calling `make_custom_shader_quad(..)` instead of `fill_quad(..)` on the `Renderer` inside the `draw(..)` method of the `Overlay` trait.
+The custom shader render pipeline is defined in `wgpu::custom_shader_quad`. This is where the shader code is inserted.
 
+For all widgets that implement the `Overlay` trait, one could use a custom shader by calling `make_custom_shader_quad(..)` instead of `fill_quad(..)` on the `Renderer` inside the `draw(..)` method of the `Overlay` trait.
+<br/><br/> 
 
 ## Drawbacks
 
@@ -275,13 +271,13 @@ Since the interaction information (mouse press, key press, etc) is sent through 
 Custom shaders would only be available with the `wgpu` feature. 
 
 The byte size of the data going from the CPU to the GPU is fixed through attributes is fixed at 26 bytes right now. Users cannot send more data than this to their custom shader.
-
+<br/><br/> 
 ## Rationale and alternatives
 
 Currently, the alternative to custom shader quads is to implement a custom WGPU pipeline with a lot of boilerplate, but with more flexibility. The custom shader quads allow users who are not familiar with GPU pipelines to use custom shaders rather easily.
 
 The impact of *not* implementing this feature is that it is harder to personalize the look of an Ice application. For example, there is only one plotting library that is compatible with Iced at the moment, and it might not produce a good enough look for a particular class of commercial products like audio plugins. Shaders give users the ability to improve the look of their applications tremendously.
-
+<br/><br/> 
 
 
 
@@ -292,10 +288,12 @@ The implementation is already up and running in my fork of the `iced` repository
 If one were to use a custom shader quad as a transparent `Overlay` to replace the default look of a widget, how would one hide the default look of the widget? We could probably solve this by adding a `visibility` field in the `Appearance` of a widget, but this is a very significant change to the library.
 
 How to use unique uniforms for each quad: see first paragraph of the Drawbacks section.
-
+<br/><br/> 
 
 ## Future possibilities
 
 It would be better to find a more flexible way to send data to the GPU. Again, see first paragraph of the Drawbacks section.
 
 A more thorough implementation could be done for the `glow` backend as well, which I happen to not know at all unfortunately.
+
+Hot loading of shader code would be a nice feature, but definitely not a priority.
