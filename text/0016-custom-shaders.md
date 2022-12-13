@@ -41,8 +41,10 @@ pub struct CustomShaderQuad {
 
 The `mouse_position`, `mouse_click`, `time`, `frame_number` fields are bound to the shader attributes behind the scenes, which means that their values are accessible in the shader code. The render can thus potentially react to mouse hovers, mouse clicks, key presses, etc. The names for `mouse_click`, `time`, `frame_number` are hard coded, but one could send any information to the shader through those fields provided that the types match (e.g. send an arbitrary flag through the `time` variable by setting it to either 0.0 or 1.0). The `shader_code` field expects the WGSL shader code that will be used to render the quad. 
 
+![custom_shader_quad](/text/custom_shader_quad.gif)
 
-To showcase custom shaders, we provide an example called `custom_shader_quad`, where the union of a star shape with a moon shape is rendered. In this example, the shadered quad interacts with mouse clicks and their timing, which means that we need
+
+To showcase custom shaders, we provide an example called `custom_shader_quad`, where the union of a star shape with a moon shape is rendered. See the example here: https://github.com/eliotbo/iced/tree/master/examples/custom_shader_quad. In this example, the shadered quad interacts with mouse clicks and their timing, which means that we need
 to pass this information to the shader. The shader code is imported from the `src` directory using 
 
 ```rs 
@@ -58,6 +60,7 @@ We define a struct called `StarMoon` that implements the `Widget` trait, and con
         duration_since_start: Duration,
     }
 ```
+
 
 In similar fashion to custom quads, the `draw(..)` method for the `Widget` implementation of `StarMoon` is written as follows:
 ```rs
@@ -152,7 +155,7 @@ pub struct CustomShaderQuad {
     pub shader_code: String,
 }
 ```
-
+This struct should be called by the end user to instanciate a custom shader quad. It is present inside the `draw(..)` method in the example above.
 
 We create a new file called `custom_shader_quad.rs` in the `graphics::layer` directory, and add two new struct called  `CustomShaderQuadWithCode` and `CustomShaderQuad`:
 ```rs
@@ -260,57 +263,39 @@ In `graphics::renderer`, we add a new method for the `Renderer` struct:
     }
 ```
 
+This `make_custom_shader_quad(..)` method must be called by the end user to instanciate a custom shader quad. It is also present inside the `draw(..)` method in the example above. In the case where the `mouse_position`, `mouse_click`, `time` and `frame` fields are not needed, the user must give dummy values to these fields anyway.
 
-
-This is the technical portion of the RFC. Explain the design in sufficient detail that:
-
-- Its interaction with other features is clear.
-- It is reasonably clear how the feature would be implemented.
-- Corner cases are dissected by example.
-
-The section should return to the examples given in the previous section, and explain more fully how the detailed proposal makes those examples work.
+For all widgets that implement the `Overlay` trait, one could use a custom shader by calling `make_custom_shader_quad(..)` instead of `fill_quad(..)` on the `Renderer` inside the `draw(..)` method of the `Overlay` trait.
 
 
 ## Drawbacks
 
-Since the interaction information (mouse press, key press, etc) is sent through attributes, this information is sent once for every vertex, which amounts to four times the amount of data that is actually needed. Ideally, this information would be sent through a uniform buffer that is unique to each shader quad, but this would require a more complex implementation and would most likely break the current implementation of other rendering primitives. In the grand scheme of things, this amount of extra data  is not very large at the moment, but it is something to keep in mind since it wouldn't be practical to generalize the above scheme to more complex vertex geometries.
+Since the interaction information (mouse press, key press, etc) is sent through attributes, this information is sent once for every vertex, which amounts to four times the quantity of data that is actually needed. Ideally, this information would be sent through a uniform buffer that is unique to each shader quad, but this would require a more complex implementation and would most likely break the current implementation of other rendering primitives. In the grand scheme of things, this quantity of extra data  is not very large, but it is something to keep in mind since it wouldn't be practical to generalize the above scheme to more complex vertex geometries.
 
+Custom shaders would only be available with the `wgpu` feature. 
+
+The byte size of the data going from the CPU to the GPU is fixed through attributes is fixed at 26 bytes right now. Users cannot send more data than this to their custom shader.
 
 ## Rationale and alternatives
 
-- Why is this design the best in the space of possible designs?
-- What other designs have been considered and what is the rationale for not choosing them?
-- What is the impact of not doing this?
+Currently, the alternative to custom shader quads is to implement a custom WGPU pipeline with a lot of boilerplate, but with more flexibility. The custom shader quads allow users who are not familiar with GPU pipelines to use custom shaders rather easily.
+
+The impact of *not* implementing this feature is that it is harder to personalize the look of an Ice application. For example, there is only one plotting library that is compatible with Iced at the moment, and it might not produce a good enough look for a particular class of commercial products like audio plugins. Shaders give users the ability to improve the look of their applications tremendously.
 
 
-## [Optional] Prior art
-
-Discuss prior art, both the good and the bad, in relation to this proposal.
-A few examples of what this can include are:
-
-- Does this feature exist in other GUI toolkits and what experience have their community had?
-- Are there any published papers or great posts that discuss this? If you have some relevant papers to refer to, this can serve as a more detailed theoretical background.
-
-This section is intended to encourage you as an author to think about the lessons from other toolkits, provide readers of your RFC with a fuller picture.
-If there is no prior art, that is fine - your ideas are interesting to us whether they are brand new or if it is an adaptation from other languages.
-
-Note that while precedent set by other languages is some motivation, it does not on its own motivate an RFC.
-Please also take into consideration that iced sometimes intentionally diverges from common toolkit features.
 
 
 ## Unresolved questions
 
-- What parts of the design do you expect to resolve through the RFC process before this gets merged?
-- What parts of the design do you expect to resolve through the implementation of this feature before stabilization?
-- What related issues do you consider out of scope for this RFC that could be addressed in the future independently of the solution that comes out of this RFC?
+The implementation is already up and running in my fork of the `iced` repository ( https://github.com/eliotbo/iced ), but there are a few questions that I would like to discuss.
+
+If one were to use a custom shader quad as a transparent `Overlay` to replace the default look of a widget, how would one hide the default look of the widget? We could probably solve this by adding a `visibility` field in the `Appearance` of a widget, but this is a very significant change to the library.
+
+How to use unique uniforms for each quad: see first paragraph of the Drawbacks section.
 
 
-## [Optional] Future possibilities
+## Future possibilities
 
-Think about what the natural extension and evolution of your proposal would be and how it would affect the toolkit and project as a whole in a holistic way. Try to use this section as a tool to more fully consider all possible interactions with the project and language in your proposal. Also consider how this all fits into the roadmap for the project.
+It would be better to find a more flexible way to send data to the GPU. Again, see first paragraph of the Drawbacks section.
 
-This is also a good place to "dump ideas", if they are out of scope for the RFC you are writing but otherwise related.
-
-If you have tried and cannot think of any future possibilities, you may simply state that you cannot think of anything.
-
-Note that having something written down in the future-possibilities section is not a reason to accept the current or a future RFC; such notes should be in the section on motivation or rationale in this or subsequent RFCs. The section merely provides additional information.
+A more thorough implementation could be done for the `glow` backend as well, which I happen to not know at all unfortunately.
