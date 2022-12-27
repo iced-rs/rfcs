@@ -24,6 +24,7 @@ impl Application for MyAwesomeApplication {
 }
 ```
 
+
 ## Motivation
 
 Returning commands have several deficiencies:
@@ -37,18 +38,20 @@ Returning commands have several deficiencies:
 
 The proposed API would allow for implementing additional allocation improvements
 such as:
-* Re-using space for spawned futures using a similar stragey as the one used in
+* Re-using allocations for spawned futures using a similar stragey as the one in
   [`reusable-box-futures`](https://docs.rs/reusable-box-future) built on top of
   a slab allocator.
 * Not allocating certain things on the heap at all, like a command buffer which
   uses stack space can be used with iced applications.
-* Coalescing commands earlier when appropriate.
+* Coalescing commands earlier if appropriate. For example closing or resizing
+  the window only needs to retain the latest command issued.
 
 
 ## Guide-level explanation
 
 This proposes to introduce the following trait and associated types to use as
-shown above:
+shown above ([see my branch for proposed documentation and
+tests](https://github.com/udoprog/iced/blob/commands/native/src/commands.rs)):
 
 ```rust
 pub trait Commands<T> {
@@ -110,22 +113,23 @@ pub enum Command<T> {
 }
 ```
 
+
 #### Motivating `Commands::perform`:
 
 Previously when components were composed, futures where boxed early to be
 shipped in a `Command`. So [mapping over them means mapping over an already
 boxed
-futures](https://github.com/iced-rs/iced/blob/11f5527d7645619f49b030e30485f24ac637efbd/native/src/command/action.rs#L47).
+future](https://github.com/iced-rs/iced/blob/11f5527d7645619f49b030e30485f24ac637efbd/native/src/command/action.rs#L47).
 
-If we instead bubble down the `perform` action we can do the message
-transformation directly in passed down callback function. Fully avoiding the
-additional allocation and pointer indirection introduced when mapping over boxed
-futures.
+If we instead pass down the `map` function `perform` the underlying command
+buffer can do the transformation once, effectively reducing the number of
+allocations and pointer indirection used to a single one.
 
 You can see that in action [in my
 branch](https://github.com/udoprog/iced/blob/27e40c93635ff48451b5df9e6b65834701fbc863/native/src/commands.rs#L228).
-Note particulary how the generic future is passed straight through and all the
-message processing happens in the callback function.
+Note how the future is passed through and all the message mapping happens
+directly in the callback function rather than inside of a boxed future.
+
 
 #### Motivating `Commands::by_ref`:
 
@@ -146,6 +150,7 @@ But this has the following downsides:
   commands).map(/*  */)`, see also
   [`Iterator::by_ref`](https://doc.rust-lang.org/std/iter/trait.Iterator.html#method.by_ref)
   so even if we remove the GAT it's in my mind worth keeping.
+
 
 #### Motivating `Commands::map`:
 
@@ -199,6 +204,7 @@ See this PR for a working implementation:
 
 See this application and branch for example use:
 <https://github.com/udoprog/ontv/tree/commands>.
+
 
 ## Drawbacks
 
