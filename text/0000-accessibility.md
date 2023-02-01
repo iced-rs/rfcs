@@ -30,7 +30,7 @@ Accessibility Nodes need relatively consistent Ids for each element in the tree.
 
 Iced Widget `Id` implementation previously used usize, but now it will use u64 for widgets, and also supports creating `Id`s for windows, which also need a relatively consistent NodeId. `accesskit::NodeId` is backed by non-zero `u128`, so Widget `Id`s occupy the range `[1, u64::MAX]`, while window `Id`'s occupy `[u64::MAX + 1, u128::MAX]`. This avoids collisions between the two types of `Id`s, which are generated without knowledge of eachother in somewhat different ways. See an initial implementation [here](https://github.com/wash2/iced/blob/a11y/core/src/id.rs).
 
-(`A11yId`)[https://github.com/wash2/iced/blob/a11y/accessibility/src/id.rs] wraps the different `Id`s and implements conversion between Iced Id types and accesskit NodeId types for convenient usage:
+[`A11yId`](https://github.com/wash2/iced/blob/a11y/accessibility/src/id.rs) wraps the different `Id`s and implements conversion between Iced Id types and accesskit NodeId types for convenient usage:
 ```rust
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum A11yId {
