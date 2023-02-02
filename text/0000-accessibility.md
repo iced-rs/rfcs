@@ -16,6 +16,101 @@ This proposal is transparent to most Iced developers. Only widget implementors n
 
 Some initial implementations using this method are [here for the button](https://github.com/wash2/iced/blob/c260dd413b2aeebdd79a8ce926aa9fc5556f048b/native/src/widget/button.rs#L291), [here for the container](https://github.com/wash2/iced/blob/c260dd413b2aeebdd79a8ce926aa9fc5556f048b/native/src/widget/container.rs#L269), [here for a row](https://github.com/wash2/iced/blob/c260dd413b2aeebdd79a8ce926aa9fc5556f048b/native/src/widget/row.rs#L247) and [here for Text](https://github.com/wash2/iced/blob/45780fc8a764ea0075b4139a163c13b0a0aad0a8/native/src/widget/text.rs#L176). While the current implementations may not be complete, they demonstrate usage.
 
+We can quickly walk through implementation for `Text` and then for the `Button`. 
+
+Static text is a leaf node, so its implementation is really simple. It can simply create its Node, then build and return its `A11yTree` using the leaf node helper. The `a11y_nodes` method receives the widget `Layout` as an argument, so it can add its bounds to the node.
+
+```rust
+#[cfg(feature = "a11y")]
+fn a11y_nodes(&self, layout: Layout<'_>) -> iced_accessibility::A11yTree {
+    use iced_accessibility::{
+        accesskit::{self, kurbo::Rect},
+        A11yNode, A11yTree,
+    };
+
+    // get the bounds of the widget
+    let Rectangle {
+        x,
+        y,
+        width,
+        height,
+    } = layout.bounds();
+    let bounds = Some(Rect::new(
+        x as f64,
+        y as f64,
+        (x + width) as f64,
+        (y + height) as f64,
+    ));
+
+    // create the node
+    let node = accesskit::Node {
+        role: accesskit::Role::StaticText,
+        bounds,
+        name: Some(self.content.to_string().into_boxed_str()),
+        live: Some(accesskit::Live::Polite),
+        ..Default::default()
+    };
+
+    // create the A11yTree using the leaf node helper
+    A11yTree::leaf_node(A11yNode::new(node, self.id.clone()))
+}
+```
+
+Buttons have a single child, which may also have children, so its implementation is requires an extra step of handling the children nodes. It is also more interactible than static text, so we can define actions that the accessibility tools may request to the widget.
+
+```rust
+#[cfg(feature = "a11y")]
+fn a11y_nodes(&self, layout: Layout<'_>) -> iced_accessibility::A11yTree {
+    use enumset::enum_set;
+    use iced_accessibility::{
+        accesskit::{kurbo::Rect, Action, DefaultActionVerb, Node, Role},
+        A11yNode, A11yTree,
+    };
+
+    // create the child tree using the layout child
+    let child_layout = layout.children().next().unwrap();
+    let child_tree = self.content.as_widget().a11y_nodes(child_layout);
+
+    // get the bounds for the button's node
+    let Rectangle {
+        x,
+        y,
+        width,
+        height,
+    } = layout.bounds();
+    let bounds = Some(Rect::new(
+        x as f64,
+        y as f64,
+        (x + width) as f64,
+        (y + height) as f64,
+    ));
+
+    // build the node
+    // The button includes some actions. The default action is important, and many widgets may support the default action. This represents the default way of interacting with a button, in this case, clicking. For other widgets it may be different.
+    let node = Node {
+        role: Role::Button,
+        actions: enum_set!(Action::Focus | Action::Default),
+        bounds,
+        name: self.name.as_ref().map(|n| n.to_string().into_boxed_str()),
+        description: self
+            .description
+            .as_ref()
+            .map(|n| n.to_string().into_boxed_str()),
+        focusable: true,
+        default_action_verb: Some(DefaultActionVerb::Click),
+        ..Default::default()
+    };
+
+    // Create the A11yTree using the button node and its child tree using the helper
+    A11yTree::node_with_child_tree(
+        A11yNode::new(node, self.id.clone()),
+        child_tree,
+    )
+}
+```
+
+Feel free to check out the other implementations, or maybe check out the Egui implementation as well.
+
 
 ## Implementation strategy
 
@@ -362,7 +457,7 @@ This design is currently the only design, but it aims to neatly fit into the exi
 
 - What other designs have been considered and what is the rationale for not choosing them?
 
-I believe other designs might use a persistent widget tree and a diffing algorithm, which don't currently exist in Iced. Another option might 
+I believe other designs might use a persistent widget tree and a diffing algorithm, which don't currently exist in Iced. Another option might use some global state store for faster lookups, though I'm still not entirely sure it's a major issue to begin with.
 
 - What is the impact of not doing this?
 
@@ -375,17 +470,16 @@ Egui supports accessibility via Accesskit. The Egui widget implementations could
 
 ## Unresolved questions
 
-- Maybe there should be a new Id variant?
+- Maybe there should be a new Id variant for Groups of Ids in a single widget?
 - Maybe there should be more helper methods for the different widget types?
 - What related issues do you consider out of scope for this RFC that could be addressed in the future independently of the solution that comes out of this RFC?
 
-Actual Widget implementations are somewhat out of scope of this RFC, as long as all existing widgets *can* be implemented using the skeleton proposed here.
-
+Actual Widget implementations are somewhat out of scope of this RFC. Of course I hope that most widgets can be easily implemented with the skeleton proposed here, but it may become useful to define templates for different `Node`s or more helpers for building `A11yTree`s
 
 
 ## Future possibilities
 
 - Persistent widget tree with diffing.
-- Better focus handling
+- Improved focus handling
 - automated testing of accessibility implementations
 - multi-window (some changes to the winit implementation would need to be made)
