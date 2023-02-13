@@ -123,7 +123,7 @@ This proposal starts with the `iced_accessibility` crate and the types that it i
 
 Accessibility Nodes need relatively consistent Ids for each element in the tree. A11yId is built using a slightly modified version of the existing `iced_native::widget::id::Id`. Because `iced_native` will depend on `iced_accessibility` the `Id` type is moved to `iced_core` and be re-exported by `iced_native`.
 
-Iced Widget `Id` implementation previously used usize, but now it will use u64 for widgets, and also supports creating `Id`s for windows, which also need a relatively consistent NodeId. `accesskit::NodeId` is backed by non-zero `u128`, so Widget `Id`s occupy the range `[1, u64::MAX]`, while window `Id`'s occupy `[u64::MAX + 1, u128::MAX]`. This avoids collisions between the two types of `Id`s, which are generated without knowledge of eachother in somewhat different ways. See an initial implementation [here](https://github.com/wash2/iced/blob/a11y/core/src/id.rs).
+Iced Widget `Id` implementation previously used usize, but now it will use u64 for widgets, and also supports creating `Id`s for windows, which also need a relatively consistent NodeId. `accesskit::NodeId` is backed by non-zero `u128`, so Widget `Id`s occupy the range `[1, u64::MAX]`, while window `Id`'s occupy `[u64::MAX + 1, u128::MAX]`. This avoids collisions between the two types of `Id`s, which are generated without knowledge of eachother in somewhat different ways. Lastly, the `Set` variant has also been added so that widget implementations which want to have multiple `Id`s may do so. See an initial implementation [here](https://github.com/wash2/iced/blob/a11y/core/src/id.rs).
 
 [`A11yId`](https://github.com/wash2/iced/blob/a11y/accessibility/src/id.rs) wraps the different `Id`s and implements conversion between Iced Id types and accesskit NodeId types for convenient usage:
 ```rust
@@ -446,7 +446,7 @@ See https://github.com/wash2/iced for more implementation details
 
 ## Drawbacks
 
-Drawbacks of this proposal are that the accessibility tree must be rebuilt every redraw. Accesskit also is still missing some widget implementations, though I'm not sure what they are. Lastly, the way focus is recalculated every redraw after accessibility is enabled may cause a performance hit depending on the application. There may also not be a 1:1 mapping from iced widget `Id` to accesskit `NodeId`, unless this kind of design is enforced in Iced. If a widget exists which maintains more than one accessibility node which may have application focus, the current proposal may not support it correctly. Ideally Though, each widget would contribute 1 Node to the accessibility tree. Maybe an additional variant of the iced Id type could include the Union of a set of Iced `Id`s and would match any of the `Id`s that it includes.
+Drawbacks of this proposal are that the accessibility tree must be rebuilt every redraw. Accesskit also is still missing some widget implementations, though I'm not sure what they are. Lastly, the way focus is recalculated every redraw after accessibility is enabled may cause a performance hit depending on the application. 
 
 
 ## Rationale and alternatives
@@ -482,4 +482,4 @@ Actual Widget implementations are somewhat out of scope of this RFC. Of course I
 - Persistent widget tree with diffing.
 - Improved focus handling
 - automated testing of accessibility implementations
-- multi-window (some changes to the winit implementation would need to be made)
+- multi-window - Some changes to the winit implementation would need to be made for multi-window, and can sorta be previewed in https://github.com/pop-os/iced/tree/accesskit in iced-sctk. It supports multi windows, layer surfaces, and popups on wayland. It is also using the unix platform adapter instead of the winit adapter among a few other differences.)
