@@ -1,63 +1,100 @@
-# Feature Name
+# New theme system
 
 ## Summary
 
-One paragraph explanation of the feature.
+The idea is to get rid of Style Sheet and simplify the custom widget implementation.
 
+- the library will take a color sheme (Light and Dark), that we define at launch.
+- we can tell the library if it should use the light or dark theme
+- we don't have to specifie the theme, it should have default themes
 
 ## Motivation
 
-Why are we doing this? What use cases does it support? What is the expected outcome?
+Because right now, if we want for example, 2 containers with 2 differents colors, we need to create our own ContainerType, and then implement `container::StyleSheet` for our custom theme.
+This bring a lot of new concept for new users.
 
 
 ## Guide-level explanation
 
-Explain the proposal as if it was already included in the library and you were teaching it to another iced programmer. That generally means:
+Iced will have a type Palette:
+```
+/// A color palette type interne to the library
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub struct Palette {
+    /// The background [`Color`] of the [`Palette`].
+    pub background: Color,
+    /// The text [`Color`] of the [`Palette`].
+    pub text: Color,
+    /// The primary [`Color`] of the [`Palette`].
+    pub primary: Color,
+    /// The success [`Color`] of the [`Palette`].
+    pub success: Color,
+    /// The danger [`Color`] of the [`Palette`].
+    pub danger: Color,
+}
+```
+When we start the program, we can give our own implementation of DarkPalette and LightPalette to Iced.
+We also need a mechanism to tell iced when to use DarkPalette or LightPalette.
 
-- Introducing new named concepts.
-- Explaining the feature largely in terms of examples.
-- Explaining how iced programmers should *think* about the feature, and how it should impact the way they use iced. It should explain the impact as concretely as possible.
+There will be no custom theme. The apparence of the widgets will be created from the shemes colors.
 
-For implementation-oriented RFCs (e.g. for compiler internals), this section should focus on how compiler contributors should think about the change, and give examples of its concrete impact. For policy RFCs, this section should provide an example-driven introduction to the policy, and explain its impact in concrete terms.
+If, we wan't more than 2 themes, or if we need more customisation (for example, if we need 2 container with 2 differents colors):
+- we could define our own colors sheme to fit our need:
 
+```
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub struct CustomPalette {
+    pub primary: Color,
+    pub onPrimary: Color,
+    pub thertiary: Color,
+    pub onTertiary: Color,
+    pub secondary: Color,
+    pub onSecondary: Color,
+    pub background: Color,
+    pub text: Color,
+    pub primary: Color,
+    pub success: Color,
+    pub danger: Color,
+}
+```
+And then we could just overide properties like that:
+```
+Container::new()
+    .background(self.theme.primary)
+    .border_color(self.theme.onPrimary)
+    .border_width(2f32)
+```
+
+Notice we could set border_width, that way, we don't need style sheet anymore.
+
+If we want to provide different style of Container:
+
+```
+Container::new()
+
+ContainerBoxed::new() // two separate function
+```
 
 ## Implementation strategy
 
-This is the technical portion of the RFC. Explain the design in sufficient detail that:
-
-- Its interaction with other features is clear.
-- It is reasonably clear how the feature would be implemented.
-- Corner cases are dissected by example.
-
-The section should return to the examples given in the previous section, and explain more fully how the detailed proposal makes those examples work.
-
+I don't know how to do it yet. Maybe there is some reasons why we can't set some widget properties directly in our code. However, this seems to be the easiest way.
 
 ## Drawbacks
 
-Why should we *not* do this?
-
+- it would break the api
+- maybe other things that I'm not aware of (I'm new to Rust)
 
 ## Rationale and alternatives
 
-- Why is this design the best in the space of possible designs?
-- What other designs have been considered and what is the rationale for not choosing them?
-- What is the impact of not doing this?
-
+If we continue with the current style symstem, we force ourself to make the implementation of a widget style sheet in one place.
+With this approach, we could easily make a custom view function with whatever widget we wan't, and it will have no effect with other fonctionnaly that we have declared in other files.
+Also, it will make small scale customization easier for new users.
 
 ## [Optional] Prior art
 
-Discuss prior art, both the good and the bad, in relation to this proposal.
-A few examples of what this can include are:
-
 - Does this feature exist in other GUI toolkits and what experience have their community had?
-- Are there any published papers or great posts that discuss this? If you have some relevant papers to refer to, this can serve as a more detailed theoretical background.
 
-This section is intended to encourage you as an author to think about the lessons from other toolkits, provide readers of your RFC with a fuller picture.
-If there is no prior art, that is fine - your ideas are interesting to us whether they are brand new or if it is an adaptation from other languages.
-
-Note that while precedent set by other languages is some motivation, it does not on its own motivate an RFC.
-Please also take into consideration that iced sometimes intentionally diverges from common toolkit features.
-
+All my ideas come from Jetpack Compose. That's exactly how it manages customization and I find it easier, with less boiler plate.
 
 ## Unresolved questions
 
@@ -65,13 +102,6 @@ Please also take into consideration that iced sometimes intentionally diverges f
 - What parts of the design do you expect to resolve through the implementation of this feature before stabilization?
 - What related issues do you consider out of scope for this RFC that could be addressed in the future independently of the solution that comes out of this RFC?
 
-
 ## [Optional] Future possibilities
 
-Think about what the natural extension and evolution of your proposal would be and how it would affect the toolkit and project as a whole in a holistic way. Try to use this section as a tool to more fully consider all possible interactions with the project and language in your proposal. Also consider how this all fits into the roadmap for the project.
 
-This is also a good place to "dump ideas", if they are out of scope for the RFC you are writing but otherwise related.
-
-If you have tried and cannot think of any future possibilities, you may simply state that you cannot think of anything.
-
-Note that having something written down in the future-possibilities section is not a reason to accept the current or a future RFC; such notes should be in the section on motivation or rationale in this or subsequent RFCs. The section merely provides additional information.
