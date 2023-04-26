@@ -76,7 +76,7 @@ Container::new(iced::Container::Boxed)
 ## Implementation strategy
 
 Just define more method for each widget. The default attributes will be set according to the theme of the application.
-The style parameter will be removed and replaced by the self attributes of the structure in question.
+The style parameter of the draw function will be removed and replaced by the self attributes of the structure in question.
 
 ## Drawbacks
 
