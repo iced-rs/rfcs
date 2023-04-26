@@ -67,17 +67,16 @@ Container::new()
 
 Notice we could set border_width, that way, we don't need style sheet anymore.
 
-If we want to provide different style of Container:
+If we want to provide different style of Container, we could simply give an enumetation to `new()`
 
 ```
-Container::new()
-
-ContainerBoxed::new() // two separate function
+Container::new(iced::Container::Boxed)
 ```
 
 ## Implementation strategy
 
-I don't know how to do it yet. Maybe there is some reasons why we can't set some widget properties directly in our code. However, this seems to be the easiest way.
+Just define more method for each widget. The default attributes will be set according to the theme of the application.
+The style parameter will be removed and replaced by the self attributes of the structure in question.
 
 ## Drawbacks
 
@@ -86,9 +85,10 @@ I don't know how to do it yet. Maybe there is some reasons why we can't set some
 
 ## Rationale and alternatives
 
-If we continue with the current style symstem, we force ourself to make the implementation of a widget style sheet in one place.
+If we continue with the current style system, we force ourself to make the implementation of a widget style sheet in one place.
 With this approach, we could easily make a custom view function with whatever widget we wan't, and it will have no effect with other fonctionnaly that we have declared in other files.
 Also, it will make small scale customization easier for new users.
+This brings quick widget configuration, while leaving the possibility of creating your own widget if you really want a lot of customization.
 
 ## [Optional] Prior art
 
@@ -99,6 +99,9 @@ All my ideas come from Jetpack Compose. That's exactly how it manages customizat
 ## Unresolved questions
 
 - What parts of the design do you expect to resolve through the RFC process before this gets merged?
+
+I have already done a test with Container and I am able to change the background color
+
 - What parts of the design do you expect to resolve through the implementation of this feature before stabilization?
 - What related issues do you consider out of scope for this RFC that could be addressed in the future independently of the solution that comes out of this RFC?
 
