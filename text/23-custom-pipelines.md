@@ -55,124 +55,55 @@ hops? Could we do this with a minimal unsafe abstraction layer? Should we even d
 ![](silvia.jpeg)
 
 As you can see, this is a somewhat complex topic with a lot of tradeoffs between implementation strategies. Of 
-course, I would love if there was a better idea floating around out there that I haven't thought of! That being 
-said, **here are some of the concepts that you will need to understand before you can understand what this 
-RFC aims to address.**
+course, I would love if there was a better idea floating around out there that I haven't thought of! That being said,
+here are a few different designs & their concepts that would need to be introduced to Iced. I've broken them into 
+their own markdown files for an easier time reading!
 
-🖼 **Custom Pipelines**
+1) [Custom Primitive Pointer Design](designs/23-01-pointer.md)
+2) [Custom Shader Widget Design](designs/23-02-widget.md)
+3) [Multi-Backend Design](designs/23-03-multi-backend.md)
 
-This is essentially just a regular ol' wgpu pipeline implementation, except one that isn't already integrated into 
-Iced! This can be as simple or complex as you want it to be. For example, in a prototype that I made to render a 
-simple triangle, this was as simple as this struct:
+All of these designs must be flagged under `wgpu`, unless we wanted to do some kind of fallback for tiny-skia which 
+I don't think is viable. What would we fall back to for the software renderer if a user tries to render a 3D object, 
+which tiny-skia does not support? Blue screen? :P
 
-```rust
-pub struct CustomPipeline {
-    pipeline: wgpu::RenderPipeline,
-    vertices: wgpu::Buffer,
-}
-```
+Overall, I'm the most happy with design #3 and think that it offers the most flexibility for advanced users to 
+truly render anything they want.
 
-In Iced, `Primitive`s are mapped internally to the appropriate pipeline, though have no direct relationship to each 
-other (for instance, a `Pipeline` doesn't have a primitive type `P`). Each is chosen manually for what is 
-appropriate. There is currently also no abstraction for what a `Pipeline` actually is; by their nature they are all 
-somewhat unique from each other, with minor underlying similarities (for example, every render pipeline must at some 
-point allocate some data to a `wgpu::Buffer` & submit a `draw` command).
-
-
-💠 **Custom Primitives**
-
-What, exactly, pray tell, are we rendering? Ultimately this is some chunk of data that gets used by a custom 
-pipeline. This could take the form of data that's passed directly to the existing `Primitive` enum (like 
-current `Primitive`s are), or something as simple as a single pointer.
-
-One implementation might mean that a custom primitive could be defined within the existing `Primitive` enum as just a 
-pointer to some pipeline state that implements certain methods required for rendering.
-
-```rust
-pub enum Primitive {
-    //...,
-    Custom {
-        id: u64, // a pipeline reference ID
-        pipeline_init: fn(device: &wgpu::Device, format: wgpu::TextureFormat) -> Box<dyn Renderable + 'static>,
-        // where "Renderable" defines a set of methods necessary for drawing
-    }
-}
-```
-
-Another implementation might define a custom primitive as a generic type that is unique to a `Renderer` or `Backend`.
-
-```rust
-pub trait Backend<Primitive> {
-    //...
-}
-```
-
-🧅 **Layers** 
-
-In Iced, layering currently happens at the presentation level. Primitives are submitted to the `Renderer` in a 
-queue-like fashion, and are then grouped before being drawn back to front. This allows primitives that are meant to be 
-rendered together to be transformed together, somewhat like a scene. For example, when clipping primitives let's 
-say in a `Canvas`, this will create a new layer. Note that every layer added to the layer stack will incur 
-additional performance costs with pipeline switching & extra draw commands submitted to the GPU!
-
-When considering a layering approach for custom primitives, we must think about how they are processed. Should a 
-custom primitive be included in the existing `iced_wgpu::Layer` with some sort of ID matching?
-
-```rust
-pub struct Layer<'a> {
-    //...
-    // some kind of reference to what can be rendered in this layer that
-    // we can match to a pipeline
-    custom: Vec<PipelineId>,
-}
-```
-
-Or perhaps we should enforce that all custom pipelines must group its supported primitives within its own layer? 
-This needs some considering, but could be implemented further down the line as an optimization.
 
 ## 🎯 Implementation strategy
 
-I've gone through a few ~~hundred~~ dozen implementation strategies. I'll share a few here:
+### 🙌 #1: Custom Primitive Pointer Design
 
-### 🤾 Just throw a pointer at the `Renderer` 
+Behind the scenes, this would require very little changes to Iced! 
 
-You can view a small, very, *very* rough and unrefined prototype of this strategy [here](https://github.com/bungoboingo/iced/tree/custom-shader/pipeline-marker/examples/custom_shader/src). 
+A `Primitive::Custom` variant would need to be added to the existing `iced_graphics::Primitive` enum, in order to 
+have a way to pass a pipeline pointer to the `Renderer` and indicate its proper order in the primitive stack.
 
-This example has a pointer-based approach, where the "state" of a pipeline & its associated primitive data is just 
-stored as a heap allocated pointer within the existing `iced_wgpu::Backend`. Within a custom widget's `draw`, 
-primitives are drawn like this:
+We would also need to add a new field to an `iced_wgpu::Layer`, something along the lines of:
 
 ```rust
-//...
-    renderer.draw_primitive(Primitive::Custom {
-        bounds,
-        pipeline: CustomPipeline {
-            id: self.id,
-            init: State::init,
-        },
-    })
+pub struct Layer<'a> {
+  //...
+  custom: Vec<PipelineId>,
+}
 ```
 
-Where `State::init` is a fn pointer with type signature:
-```rust
-pub init: fn(device: &wgpu::Device, format: wgpu::TextureFormat,) -> Box<dyn Renderable>
-```
+To indicate which pipelines are grouped within this layer. Or perhaps we could require that all custom pipelines are 
+on separate layers, though that has performance implications.
 
-`Renderable` refers to a trait which allows a custom pipeline to call `prepare()` (for preparing data for 
-rendering, similar to how we are doing it in every other pipeline we support in our existing `iced_wgpu::Backend`, e.
-g. allocating & resizing wgpu buffers, writing uniform values, etc.). 
+We would also need a way to cache & perform lookups for trait objects which implement `Renderable`; in my prototype 
+I've simply used a `HashMap<PipelineId, Box<dyn Renderable>` inside of the `iced_wgpu::Backend`.
 
-`Primitive::Custom` is then processed for inclusion in an `iced_wgpu::Layer`, where (if not already initialized) 
-it's initialization (`init` above) is performed & added to a lookup map in the `iced_wgpu::Backend`. Then, come 
-render time, if there are any `custom_primitives` within the `iced_wgpu::Layer`, we simply do a lookup for its 
-pipeline pointer & call `prepare()` and `render()` as needed.
+Then, when rendering during frame presentation, we simply perform a lookup for the `PipelineId`s contains within the 
+`Layer`, and perform their `prepare()` and `render()` methods. Done!
 
-✅ **Pros of this strategy:**
+✅ **Pros of this design:**
 
 - Simple to integrate into existing Iced infrastructure without major refactors.
 - Performance is acceptable
 
-❌ **Cons of this strategy:**
+❌ **Cons of this design:**
 
 - Not flexible
   - Even with preparing this very simple example I found myself needing to adjust the `Renderable` trait to give me 
@@ -185,30 +116,19 @@ pipeline pointer & call `prepare()` and `render()` as needed.
 Overall I'm pretty unhappy with this implementation strategy, and feel as though it's too narrow for creating a truly 
 flexible & modular system of adding custom shaders & pipelines to Iced.
 
-### 🎨 Custom Shader Widget
+### 🎨 #2: Custom Shader Widget
 
-Similar to how we currently have `Canvas` in Iced, this strategy would involve creating a custom widget which is 
-dependent on `wgpu` that has its own `Program` where a user can define how to render their own custom primitive.
+The internals for this custom shader widget are very similar to the previous strategy; the main difference is that 
+internally, *we* would create the custom primitive which holds the pointer to the pipeline data, not the user. The 
+other difference is that the `Program` trait is merged with the `Renderable` trait, and that we create the widget 
+implementation for the user, no custom widget required.
 
-A custom shader widget might have a method that is defined like:
+Other concepts must be added, like the concept of `Time` in a render pass. In my prototype, I've implemented it at 
+the `wgpu::Backend` level, but in its final form we would need to shift it up to the `Compositor` level, I believe. 
+It's exposed to the user as a simple `Duration`, which is calculated from the difference between when the 
+`iced_wgpu::Backend` is initialized up until that frame.
 
-```rust
-pub trait Program {
-  type State: Default + 'static;
-
-    fn render(
-        &self,
-        state: &Self::State,
-        device: &wgpu::Device,
-        encoder: &mut wgpu::CommandEncoder,
-        //...
-    );
-```
-
-Or something similar, which, when implemented, would allow a user to define how to render their custom `State`. I 
-found that with this strategy, a `Primtive::Custom` wrapper of some kind was still needed, which ended up being 
-pretty similar to the previous strategy and just replacing `iced_graphics::Renderable` with 
-`iced_graphics::custom::Program`, so I did not finish a fully flushed out prototype.
+There may be other information needed in the `Program` trait which is discovered as the implementation evolves.
 
 ✅ **Pros:**
 
@@ -217,64 +137,52 @@ pretty similar to the previous strategy and just replacing `iced_graphics::Rende
 
 And, like the previous strategy:
 - Simple to integrate into existing Iced infrastructure without major refactors.
-- Performance is acceptable, but worse than previous strategy
+- Performance is acceptable
 
 ❌ **Cons:**
 - Same cons as the previous strategy; very little flexibility, users must shoehorn their pipeline code to fit into 
-  this very specific trait `Program` provided by Iced. 
-- When I was prototyping this out, I found it nearly impossible to do this implementation without doing some kind of 
-  reflection with `Program::State` in addition to the required dynamic dispatching. This could possibly not be a 
-  real con as there might be a different, more performant way to do it!
+  this very specific trait `Program` provided by Iced.
 
 ### 🔠 Multiple Backend Support for Compositors
 
-I have no prototype to speak of this with strategy; it will involve a good amount of restructuring, possibly some 
-codegen for performance reasons, and some intermediate data structures added to the compositor. That being said, I 
-believe this is more along the lines of a "correct" solution for integrating custom shaders & pipelines into Iced as 
-it allows the most flexibility & feels the least hacky.
-
-This strategy involves adding support for multiple `Backend`s per `Compositor`. See the diagram below for a rough 
-outline of how it would work:
-
-![](diagram.png)
-
-Every `Backend` (probably should be renamed to something more appropriate, like `Pipelines` or `PipelineManager` or 
-something for clarity) would be responsible for its own primitive type that it can support. In the case of 
-`iced_wgpu::Backend`, this would be the `iced_graphics::Primitive` enum. The command encoder would be passed down 
-into every backend for recording before being submitted to the GPU.
-
-This would require a few new concepts added to the wgpu `Compositor`:
+Internally, this design is the most complex and requires the most changes to Iced, but I don't think it's so wildly 
+complex that it would be hard to maintain! This design would require a few new concepts added to the wgpu `Compositor`:
 
 💠 **Primitive Queue**
 
-There must be a backend-aware queue which keeps track of the actual ordering of how primitives should be 
-rendered across all backends. I believe this could be implemented fairly easily either by having each `Backend` keep 
-track of its own queue and having some data structure delegate at the appropriate moment with some form of marker 
-indicating that we need to start rendering on another `Backend`. Some kind of order-tracking data structure is 
+There must be a backend-aware queue which keeps track of the actual ordering of how primitives should be
+rendered across all backends. I believe this could be implemented fairly easily either by having each `Backend` keep
+track of its own queue and having some data structure delegate at the appropriate moment with some form of marker
+indicating that we need to start rendering on another `Backend`. Some kind of order-tracking data structure is
 essential for ensuring proper rendering order when there are multiple backends.
 
 Widgets would request that their custom primitives be added to this queue when calling `renderer.draw_primitive()`.
 
 👨‍💼 **Backend "Manager"**
 
-This would essentially be responsible for initializing all the backends (lazily, perhaps!) & delegating the proper 
-primitives to the multiple `Backend`s for rendering. This would be initialized with the `Compositor` on application 
+This would essentially be responsible for initializing all the backends (lazily, perhaps!) & delegating the proper
+primitives to the multiple `Backend`s for rendering. This would be initialized with the `Compositor` on application
 start.
+
+👨‍💻 **Declarative backends!() macro**
+
+This would be initialized in `Application::run()` as a parameter, or could be exposed somewhere else potentially 
+(perhaps as an associated type of `Application`?). I haven't super thoroughly thought it through, but my initial 
+idea is to have it return a `backend::Manager` from its `TokenStream` which would be moved into the `Compositor`.
 
 ✅ **Pros:**
 - Flexible, users can do whatever they want with their own custom `Backend`.
 - Modular & additive; users can create a custom `Backend` library with their own primitives that it supports that 
   can be initialized with the  `Compositor`.
-- For users wanting to use a custom primitive from another library, or one they made, they would use it very 
-  similarly to how you use currently supported `Primitive`s in Iced, which would feel intuitive.
+- For users wanting to use a custom primitive from another library, or one they made, they would use it exactly how  
+  you use currently supported `Primitive`s in Iced, which would feel intuitive.
 
 ❌ **Cons:**
-- Doing this strategy performantly without creating a bunch of trait objects might be challenging! At least just 
-  from thinking about it for a few days I've not come up with that many ideas other than using a hefty amount of 
-  codegen via generics or declarative macros.
+- Would involve a hefty amount of codegen to do performantly
 - This would be quite a heavy refactor for the `iced_wgpu::Compositor`!
-- This would (possibly?) preclude custom primitives being grouped together with other backend's primitives in 
-  its own `Layer` for transformations, scaling, etc. which might be undesirable.
+- This design would preclude custom primitives being clipped together with other backend's primitives in 
+  its own `Layer` for transformations, scaling, etc. which might be undesirable. There might be a way to implement 
+  this within the `backend::Manager`, however!
 
 ### 🤔 Other Ideas
 
@@ -370,4 +278,5 @@ and use seamlessly as part of Iced's widget tree is the ultimate form of customi
 
 ### If you made it to the end, congratulations! 🥳
 
-Now, let's discuss! 
+Now, let's discuss!
+
