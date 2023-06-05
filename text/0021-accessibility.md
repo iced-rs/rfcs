@@ -7,7 +7,7 @@ This proposal aims to introduce Accessibility support to Iced without changing t
 
 ## Motivation
 
-Accessibility support is an important feature for GUI toolkits. [Accesskit](https://github.com/AccessKit/accesskit) provides a cross-platform interface for interacting with accessibility software. It is still a work in progress, but already supports many widget types, and is used in egui. Accesibility support is currently missing in Iced, but could be implemented using Accesskit and the strategies in this proposal.
+Accessibility support is an important feature for GUI toolkits. [Accesskit](https://github.com/AccessKit/accesskit) provides a cross-platform interface for interacting with accessibility software. It is still a work in progress, but already supports many widget types, and is used in egui. Accessibility support is currently missing in Iced, but could be implemented using Accesskit and the strategies in this proposal.
 
 
 ## Guide-level explanation
@@ -109,23 +109,23 @@ fn a11y_nodes(&self, layout: Layout<'_>) -> iced_accessibility::A11yTree {
 }
 ```
 
-Feel free to check out the other implementations, or maybe check out the Egui implementation as well.
+Feel free to check out the other implementations, or maybe check out the egui implementation as well.
 
 
 ## Implementation strategy
 
 
-This proposal starts with the `iced_accessibility` crate and the types that it introduces. `iced_accessibility` re-exports the accesskit crate and the chosen feature-gated platform adapter, one of `accesskit-winit` (most likely), `accesskit-unix`, `accesskit-windows`, or `accesskit-macos`. Iced-rs would likely want to maintain a fork of accesskit that sets the winit dependency of `accesskit-winit` to https://github.com/iced-rs/winit. 
+This proposal starts with the `iced_accessibility` crate and the types that it introduces. `iced_accessibility` re-exports the Accesskit crate and the chosen feature-gated platform adapter, one of `accesskit-winit` (most likely), `accesskit-unix`, `accesskit-windows`, or `accesskit-macos`. Iced-rs would likely want to maintain a fork of Accesskit that sets the winit dependency of `accesskit-winit` to https://github.com/iced-rs/winit. 
 
-`iced_accessibility` also provides the following types for use in `iced_native`, `iced_winit`, `iced_glutin`, or other iced crates that need to build accessibility trees from accesskit nodes.
+`iced_accessibility` also provides the following types for use in `iced_core`, `iced_runtime`, `iced_winit`, `iced_glutin`, or other iced crates that need to build accessibility trees from Accesskit nodes.
 
 ### A11yId
 
-Accessibility Nodes need relatively consistent Ids for each element in the tree. A11yId is built using a slightly modified version of the existing `iced_native::widget::id::Id`. Because `iced_native` will depend on `iced_accessibility` the `Id` type is moved to `iced_core` and be re-exported by `iced_native`.
+Accessibility Nodes need consistent IDs for each element in the tree. A11yId is built using a slightly modified version of the existing `iced_runtime::widget::id::Id`. Because `iced_runtime` will depend on `iced_accessibility` the `Id` type is moved to `iced_core` and be re-exported by `iced_runtime`.
 
-Iced Widget `Id` implementation previously used usize, but now it will use u64 for widgets, and also supports creating `Id`s for windows, which also need a relatively consistent NodeId. `accesskit::NodeId` is backed by non-zero `u128`, so Widget `Id`s occupy the range `[1, u64::MAX]`, while window `Id`'s occupy `[u64::MAX + 1, u128::MAX]`. This avoids collisions between the two types of `Id`s, which are generated without knowledge of eachother in somewhat different ways. Lastly, the `Set` variant has also been added so that widget implementations which want to have multiple `Id`s may do so. See an initial implementation [here](https://github.com/wash2/iced/blob/a11y/core/src/id.rs).
+Iced Widget `Id` implementation previously used `usize`, but now it will use `u64` for widgets, and also supports creating `Id`s for windows, which also need a relatively consistent NodeId. `accesskit::NodeId` is backed by non-zero `u128`, so Widget `Id`s occupy the range `[1, u64::MAX]`, while window `Id`'s occupy `[u64::MAX + 1, u128::MAX]`. This avoids collisions between the two types of `Id`s, which are generated without knowledge of each other in somewhat different ways. Lastly, the `Set` variant has also been added so that widget implementations which want to have multiple `Id`s may do so. See an initial implementation [here](https://github.com/wash2/iced/blob/a11y/core/src/id.rs).
 
-[`A11yId`](https://github.com/wash2/iced/blob/a11y/accessibility/src/id.rs) wraps the different `Id`s and implements conversion between Iced Id types and accesskit NodeId types for convenient usage:
+[`A11yId`](https://github.com/wash2/iced/blob/a11y/accessibility/src/id.rs) wraps the different `Id`s and implements conversion between Iced `Id` types and Accesskit`NodeId`types for convenient usage:
 ```rust
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum A11yId {
@@ -136,7 +136,7 @@ pub enum A11yId {
 
 ### A11yNode
 
-[`A11yNode`](https://github.com/wash2/iced/blob/a11y/accessibility/src/node.rs) wraps the previously defined `A11yId` and an `accesskit:Node`. It implements helpers for constructing a node from an Iced Id and a node, adding children, and conversion to the expected accesskit tuple format. 
+[`A11yNode`](https://github.com/wash2/iced/blob/a11y/accessibility/src/node.rs) wraps the previously defined `A11yId` and an `accesskit:Node`. It implements helpers for constructing a node from an Iced Id and a node, adding children, and conversion to the expected Accesskit tuple format. 
 
 ```rust
 #[derive(Debug, Clone)]
@@ -148,12 +148,12 @@ pub struct A11yNode {
 
 ### A11yTree
 
-[A11yTree](https://github.com/wash2/iced/blob/a11y/accessibility/src/a11y_tree.rs) is a tree abstraction around the accesskit Node lists that are used to represent the accessibility tree. It includes helpers for building a tree for common types of Widgets, though the list of helpers could probably be expanded in the future. What is currently proposed are:
+[A11yTree](https://github.com/wash2/iced/blob/a11y/accessibility/src/a11y_tree.rs) is a tree abstraction around the Accesskit Node lists that are used to represent the accessibility tree. It includes helpers for building a tree for common types of Widgets, though the list of helpers could probably be expanded in the future. What is currently proposed are:
 - a helper for creating an A11yTree for a widget with a single root node and some children
 - a helper for merging the trees of multiple children, primarily used in widgets like `Row` and `Column` which don't want to create an accessibility node themselves, but want to expose their children's node to their parent widget.
 - a helper for creating an A11yTree for a leaf node. a single node with no children
 
-Lastly, the tree can also be built directly from a list of root `A11yNode`s and child `A11yNode`s to accomodate widgets that don't fit in neatly to the above categories. `A11yTree` also implements conversion to the accesskit `Vec<(NodeId, Node)>` for sending tree updates.
+Lastly, the tree can also be built directly from a list of root `A11yNode`s and child `A11yNode`s to accommodate widgets that don't fit in neatly to the above categories. `A11yTree` also implements conversion to the Accesskit `Vec<(NodeId, Node)>` for sending tree updates.
 
 ```rust
 #[derive(Debug, Clone, Default)]
@@ -166,13 +166,14 @@ pub struct A11yTree {
 }
 ```
 
-### Additions to iced_native
+### Additions to iced_runtime
 
-This proposal requires changes to iced_native in addition to moving the `Id` implementation. `Accessibility` additions are (mostly) behind a feature gate. They include:
+This proposal requires changes to iced_runtime in addition to moving the `Id` implementation. `Accessibility` additions are (mostly) behind a feature gate. They include:
 - New optional method for the `Widget` trait: `a11y_nodes`
-- Wrapper types for Iced `Operation` & usage of the wrapper type internally. This is required for using Operations internally in `iced_winit` or other shells to retreive application focus. This is a change that is not feature gated, but is transparent to users.
-- addition of `a11y_nodes` method to `UserInterface`
-- addition of `Event::A11y` variant
+- Wrapper types for Iced `Operation` & usage of the wrapper type internally. This is required for using Operations internally in `iced_winit` or other shells to retrieve application focus. This is a change that is not feature gated, but is transparent to users.
+- Addition of `a11y_nodes` method to `UserInterface`
+- Addition of `Event::A11y` variant
+- Diff now makes an effort to persist the ID tree. Persistent IDs were originally thought to be optional, but it seems that they are required, else Accesskit may panic. It requires a `&mut` to do so. List widgets which may be reordered are expected to provide named IDs for each item, so that they can be tracked.
 
 ### New optional method for the `Widget` trait: `a11y_nodes`
 
@@ -189,7 +190,7 @@ Some initial implementations using this method are [here for the button](https:/
 
 ### Wrapper types for Iced `Operation` & usage of the wrapper type internally
 
-Operation must support `Application::Message` type parameter to be used by iced applications as it currently exists. Operations are also the currently preferred method for retreiving application focus, so they must be used to access the focus for communicating widget focus to accesskit. `OperationWrapper` and `OperationWrapperOutput` make this possible. It requires a small change to the `operate` signature in UserInterface, Widget, Overlay, and element types.
+Operation must support `Application::Message` type parameter to be used by iced applications as it currently exists. Operations are also the currently preferred method for retrieving application focus, so they must be used to access the focus for communicating widget focus to accesskit. `OperationWrapper` and `OperationWrapperOutput` make this possible. It requires a small change to the `operate` signature in `UserInterface`, Widget, Overlay, and element types.
 
 ```rust
 pub fn operate(
@@ -312,11 +313,11 @@ impl<M: 'static> Operation<OperationOutputWrapper<M>> for OperationWrapper<M> {
     }
 }
 ```
-### addition of `a11y_nodes` method to `UserInterface`
+### Addition of `a11y_nodes` method to `UserInterface`
 
-each `UserInterface` needs to be able to produce an accessibility tree for its widget tree. It is simple to implement. Just call into `a11y_nodes` on the root widget.
+Each `UserInterface` needs to be able to produce an accessibility tree for its widget tree. It is simple to implement. Just call into `a11y_nodes` on the root widget.
 
-### addition of `Event::A11y` variant
+### Addition of `Event::A11y` variant
 
 Widgets need some way of handling A11y events, so they are added as a variant in `Event`
 
@@ -351,7 +352,7 @@ pub enum UserEventWrapper<Message> {
 ```rust
 #[cfg(feature = "a11y")]
 let (window_a11y_id, adapter) = {
-    let node_id = iced_native::widget::id::window_node_id();
+    let node_id = iced_runtime::widget::id::window_node_id();
 
     use iced_accessibility::accesskit::{
         Node, NodeId, Role, Tree, TreeUpdate,
@@ -385,7 +386,7 @@ let (window_a11y_id, adapter) = {
 };
 ```
 - adding a boolean that tracks whether accessibility has been enabled
-- sending accessibility tree updates to accesskit if accessibility has been enabled
+- sending accessibility tree updates to Accesskit if accessibility has been enabled
 ```rust
 #[cfg(feature = "a11y")]
 if a11y_enabled {
@@ -440,7 +441,6 @@ if a11y_enabled {
     });
 }
 ```
-- reset widget Id counter before building the UserInterface
 
 See https://github.com/wash2/iced for more implementation details
 
@@ -455,9 +455,9 @@ Drawbacks of this proposal are that the accessibility tree must be rebuilt every
 
 This design is currently the only design, but it aims to neatly fit into the existing architecture and support incremental implementation.
 
-- What other designs have been considered and what is the rationale for not choosing them?
+- What other designs have been considered, and what is the rationale for not choosing them?
 
-I believe other designs might use a persistent widget tree and a diffing algorithm, which don't currently exist in Iced. Another option might use some global state store for faster lookups, though I'm still not entirely sure it's a major issue to begin with.
+I believe other designs might use a persistent widget tree and a diffing algorithm, which don't currently exist in Iced. Another option might use some global state store for faster lookups, though I'm still not entirely sure if it's a major issue to begin with.
 
 - What is the impact of not doing this?
 
@@ -472,9 +472,8 @@ Egui supports accessibility via Accesskit. The Egui widget implementations could
 
 - Maybe there should be a new Id variant for Groups of Ids in a single widget?
 - Maybe there should be more helper methods for the different widget types?
-- What related issues do you consider out of scope for this RFC that could be addressed in the future independently of the solution that comes out of this RFC?
 
-Actual Widget implementations are somewhat out of scope of this RFC. Of course I hope that most widgets can be easily implemented with the skeleton proposed here, but it may become useful to define templates for different `Node`s or more helpers for building `A11yTree`s
+Actual Widget implementations are somewhat out of scope of this RFC. Of course, I hope that most widgets can be easily implemented with the skeleton proposed here, but it may become useful to define templates for different `Node`s or more helpers for building `A11yTree`s
 
 
 ## Future possibilities
@@ -482,4 +481,4 @@ Actual Widget implementations are somewhat out of scope of this RFC. Of course I
 - Persistent widget tree with diffing.
 - Improved focus handling
 - automated testing of accessibility implementations
-- multi-window - Some changes to the winit implementation would need to be made for multi-window, and can sorta be previewed in https://github.com/pop-os/iced/tree/accesskit in iced-sctk. It supports multi windows, layer surfaces, and popups on wayland. It is also using the unix platform adapter instead of the winit adapter among a few other differences.)
+- multi-window - Some changes to the winit implementation would need to be made for multi-window, and can sorta be previewed in https://github.com/pop-os/iced/tree/accesskit in iced-sctk. It supports multi windows, layer surfaces, and popups on wayland. It is also using the unix platform adapter instead of the winit adapter among a few other differences.
